@@ -6,7 +6,7 @@
 void MaxPooling::init() {
   channel_out = channel_in;
   height_out = (1 + std::ceil((height_in - height_pool) * 1.0 / stride));
-  width_out =   (1 + std::ceil((width_in - height_pool) * 1.0 / stride));
+  width_out =   (1 + std::ceil((width_in - width_pool) * 1.0 / stride));
   dim_out = height_out * width_out * channel_out;
 }
 

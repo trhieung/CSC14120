@@ -27,33 +27,64 @@
 
 int main() {
   // data
-  MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
+  MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
   dataset.read();
   int n_train = dataset.train_data.cols();
   int dim_in = dataset.train_data.rows();
-  std::cout << "mnist train number: " << n_train << std::endl;
-  std::cout << "mnist test number: " << dataset.test_labels.cols() << std::endl;
-  // dnn
+  std::cout << "fashion-mnist train number: " << n_train << std::endl;
+  std::cout << "fashion-mnist test number: " << dataset.test_labels.cols() << std::endl;
+  
+  // // dnn
+  // Network dnn;
+  // Layer* conv1 = new Conv(1, 28, 28, 4, 5, 5, 2, 2, 2);
+  // Layer* pool1 = new MaxPooling(4, 14, 14, 2, 2, 2);
+  // Layer* conv2 = new Conv(4, 7, 7, 16, 5, 5, 1, 2, 2);
+  // Layer* pool2 = new MaxPooling(16, 7, 7, 2, 2, 2);
+  // Layer* fc3 = new FullyConnected(pool2->output_dim(), 32);
+  // Layer* fc4 = new FullyConnected(32, 10);
+  // Layer* relu1 = new ReLU;
+  // Layer* relu2 = new ReLU;
+  // Layer* relu3 = new ReLU;
+  // Layer* softmax = new Softmax;
+  // dnn.add_layer(conv1);
+  // dnn.add_layer(relu1);
+  // dnn.add_layer(pool1);
+  // dnn.add_layer(conv2);
+  // dnn.add_layer(relu2);
+  // dnn.add_layer(pool2);
+  // dnn.add_layer(fc3);
+  // dnn.add_layer(relu3);
+  // dnn.add_layer(fc4);
+  // dnn.add_layer(softmax);
+  // cnn
   Network dnn;
-  Layer* conv1 = new Conv(1, 28, 28, 4, 5, 5, 2, 2, 2);
-  Layer* pool1 = new MaxPooling(4, 14, 14, 2, 2, 2);
-  Layer* conv2 = new Conv(4, 7, 7, 16, 5, 5, 1, 2, 2);
-  Layer* pool2 = new MaxPooling(16, 7, 7, 2, 2, 2);
-  Layer* fc3 = new FullyConnected(pool2->output_dim(), 32);
-  Layer* fc4 = new FullyConnected(32, 10);
+  Layer* conv1 = new Conv(1, 28, 28, 6, 5, 5, 1, 2, 2);
+  Layer* pool2 = new MaxPooling(6, 28, 28, 2, 2, 2);
+  Layer* conv3 = new Conv(6, 14, 14, 16, 5, 5, 1, 0, 0);
+  Layer* pool4 = new MaxPooling(16, 10, 10, 2, 2, 2);
+  Layer* fc5 = new FullyConnected(pool4->output_dim(), 120);
+  Layer* fc6 = new FullyConnected(120, 84);
+  Layer* fc7 = new FullyConnected(84, 10);
   Layer* relu1 = new ReLU;
   Layer* relu2 = new ReLU;
   Layer* relu3 = new ReLU;
+  Layer* relu4 = new ReLU;
+  Layer* relu5 = new ReLU;
+  Layer* relu6 = new ReLU;
   Layer* softmax = new Softmax;
   dnn.add_layer(conv1);
   dnn.add_layer(relu1);
-  dnn.add_layer(pool1);
-  dnn.add_layer(conv2);
-  dnn.add_layer(relu2);
   dnn.add_layer(pool2);
-  dnn.add_layer(fc3);
+  dnn.add_layer(relu2);
+  dnn.add_layer(conv3);
   dnn.add_layer(relu3);
-  dnn.add_layer(fc4);
+  dnn.add_layer(pool4);
+  dnn.add_layer(relu4);
+  dnn.add_layer(fc5);
+  dnn.add_layer(relu5);
+  dnn.add_layer(fc6);
+  dnn.add_layer(relu6);
+  dnn.add_layer(fc7);
   dnn.add_layer(softmax);
   // loss
   Loss* loss = new CrossEntropy;
