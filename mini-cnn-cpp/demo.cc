@@ -27,7 +27,7 @@
 
 int main() {
   // data
-  MNIST dataset("../data/mnist/");
+  MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
   dataset.read();
   int n_train = dataset.train_data.cols();
   int dim_in = dataset.train_data.rows();
