@@ -24,9 +24,18 @@
 #include "src/optimizer.h"
 #include "src/optimizer/sgd.h"
 
+#include<stdio.h>
+
+// Include CUDA headers
+#include <cuda_runtime.h>
+#include "src/kernel/kernel.h"
+#include "src/kernel/kernel.cc"
 
 int main() {
+  printDeviceInfo();
+  
   // data
+  // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
   MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
   dataset.read();
   int n_train = dataset.train_data.cols();
@@ -90,7 +99,8 @@ int main() {
   Loss* loss = new CrossEntropy;
   dnn.add_loss(loss);
   // train & test
-  SGD opt(0.001, 5e-4, 0.9, true);
+  // SGD opt(0.001, 5e-4, 0.9, true);
+  SGD opt(0.005, 5e-4, 0.9, true);
   // SGD opt(0.001);
   const int n_epoch = 5;
   const int batch_size = 128;
