@@ -4,6 +4,7 @@ __global__ void myKernel(void) {
 }
 int main(void) {
 	myKernel <<<2, 2>>>();
+	cudaDeviceSynchronize()
 	printf("Hello CUDA!\n");
 	return 0;
 }
