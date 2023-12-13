@@ -27,7 +27,6 @@
 #include<stdio.h>
 
 // Include CUDA headers
-#include <cuda_runtime.h>
 #include "src/kernel/kernel.h"
 #include "src/kernel/kernel.cc"
 

@@ -1,3 +1,6 @@
+#ifndef HW0_H
+#define HW0_H
+
 #include <stdio.h>
 #include <math.h>
 #define N 4194304
@@ -49,3 +52,4 @@ struct GpuTimer
 		return elapsed;
 	}
 };
+#endif // HW0_H
