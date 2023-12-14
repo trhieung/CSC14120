@@ -39,7 +39,7 @@ void MNIST::read_mnist_data(std::string filename, Matrix& data) {
   }
 }
 
-void MNIST::read_mnist_label(std::string filename, Matrix& labels) {
+void MNIST::read_mnist_label(std::string filename, Matrix& la bels) {
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
     int magic_number = 0;
