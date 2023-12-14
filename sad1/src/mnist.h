@@ -22,10 +22,10 @@ class MNIST {
   // int test_data_col = 0;
   // int test_data_dim = 0;
 
-  void get_cols_dim(pair<int, int>& dim, int& n_img); //dim = <rows, cols>
+  void get_cols_dim(std::pair<int, int>& dim, int& n_img); //dim = <rows, cols>
   
-  void read_mnist_data(std::string filename, float*& data, const pair<int, int>& dim, const int& n_img);
-  void read_mnist_label(std::string filename, float*& labels, const pair<int, int>& dim, const int& n_img);
+  void read_mnist_data(std::string filename, float*& data, const std::pair<int, int>& dim, const int& n_img);
+  void read_mnist_label(std::string filename, float*& labels, const std::pair<int, int>& dim, const int& n_img);
 
   explicit MNIST(std::string data_dir) : data_dir(data_dir) {}
   void read();
