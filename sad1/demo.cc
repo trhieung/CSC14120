@@ -1,25 +1,30 @@
 #include <iostream>
-#include "src/mnist.h"
+#include <vector>
 
-
-__global__ void myKernel(vector<int> x) {
-	printf("hello from kernel, %d\n", x[0]);
+__global__ void myKernel(int* x, int size) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if (tid < size) {
+        printf("hello from kernel, %d\n", x[tid]);
+    }
 }
 
 int main(void) {
-	vector<int> x {1, 2, 3, 4, 5}
-	myKernel <<<2, 2>>>(x);
-	cudaDeviceSynchronize();
-	printf("Hello CUDA!\n");
-	// printDeviceInfo();
+    const int size = 5;
+    std::vector<int> x {1, 2, 3, 4, 5};
 
-// 	//
-// 	MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
-//   dataset.read();
-//   int n_train = dataset.train_data.cols();
-//   int dim_in = dataset.train_data.rows();
-//   std::cout << "fashion-mnist train number: " << n_train << std::endl;
-//   std::cout << "fashion-mnist test number: " << dataset.test_labels.cols() << std::endl;
-//   //
-	return 0;
+    int* d_x; // device pointer
+    cudaMalloc((void**)&d_x, size * sizeof(int));
+    cudaMemcpy(d_x, x.data(), size * sizeof(int), cudaMemcpyHostToDevice);
+
+    int threadsPerBlock = 2;
+    int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
+
+    myKernel<<<blocksPerGrid, threadsPerBlock>>>(d_x, size);
+    cudaDeviceSynchronize();
+
+    cudaFree(d_x);
+
+    printf("Hello CUDA!\n");
+
+    return 0;
 }
