@@ -9,7 +9,7 @@ int ReverseInt(int i) {
   return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-void MNIST::get_cols_dim(std::pair<int, int> dim, int n_img) { 
+void MNIST::get_cols_dim(std::string filenamem, std::pair<int, int>& dim, int& n_img) { 
     std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
     int magic_number = 0;
