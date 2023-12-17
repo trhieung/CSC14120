@@ -1,6 +1,7 @@
 #ifndef CUDA_GPUTIMER_CUH
 #define CUDA_GPUTIMER_CUH
 
+#include <cuda_runtime.h>
 
 struct GpuTimer
 {

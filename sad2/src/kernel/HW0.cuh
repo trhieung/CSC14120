@@ -3,5 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
+
 void printDeviceInfo();
+
 #endif // HW0_H
