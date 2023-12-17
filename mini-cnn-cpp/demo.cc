@@ -49,7 +49,7 @@ int main() {
     
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
-  MNIST dataset("CSC14120/sad2/data/fashion-mnist/");
+  MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
   dataset.read();
   int n_train = dataset.train_data.cols();
   int dim_in = dataset.train_data.rows();
