@@ -1,12 +1,11 @@
-#include "Test.cuh"
+#include "./cuda_file.cuh"
+#include <cstdio>
 
-__global__ void test_kernel(void) {
+__global__ void cudaKernel() {
+    printf("Hello from CUDA!\n");
 }
 
-namespace Wrapper {
-	void wrapper(void)
-	{
-		test_kernel <<<2, 2>>> ();
-		printf("Hello, world!");
-	}
+void runCudaFunction() {
+    cudaKernel<<<2, 2>>>();
+    cudaDeviceSynchronize();
 }

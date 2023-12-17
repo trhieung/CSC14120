@@ -1,10 +1,10 @@
-// #ifndef SRC_UTILS_H_
-// #define SRC_UTILS_H_
+#ifndef SRC_UTILS_H_
+#define SRC_UTILS_H_
 
-// // #include <Eigen/Core>
-// #include <algorithm>
-// #include <iostream>
-// #include <random>
+// #include <Eigen/Core>
+#include <algorithm>
+#include <iostream>
+#include <random>
 
 // // typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 // // typedef Eigen::Matrix<float, Eigen::Dynamic, 1> Vector;
@@ -12,13 +12,19 @@
 
 // static std::default_random_engine generator;
 
-// // Normal distribution: N(mu, sigma^2)
-// inline void set_normal_random(float* arr, int n, float mu, float sigma) {
-//   std::normal_distribution<float> distribution(mu, sigma);
-//   for (int i = 0; i < n; i ++) {
-//     arr[i] = distribution(generator);
-//   }
-// }
+// Normal distribution: N(mu, sigma^2)
+inline void set_normal_random(float* arr, int n, float mu, float sigma) {
+  std::normal_distribution<float> distribution(mu, sigma);
+  for (int i = 0; i < n; i ++) {
+    arr[i] = distribution(generator);
+  }
+}
+
+// shuffle cols of matrix
+inline void shuffle_data(float* data, float* labels) {
+  
+  
+}
 
 // // shuffle cols of matrix
 // inline void shuffle_data(float* data, float* labels) {
@@ -53,4 +59,4 @@
 //   return acc / n;
 // }
 
-// #endif  // SRC_UTILS_H_
+#endif  // SRC_UTILS_H_

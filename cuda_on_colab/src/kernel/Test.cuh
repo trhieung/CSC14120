@@ -1,9 +1,6 @@
-#pragma once
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#ifndef CUDA_FILE_CUH
+#define CUDA_FILE_CUH
 
-#include <stdio.h>
+void runCudaFunction();
 
-namespace Wrapper {
-	void wrapper(void);
-}
+#endif // CUDA_FILE_CUH
