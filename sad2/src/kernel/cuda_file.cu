@@ -4,6 +4,6 @@ __global__ void cudaKernel() {
 }
 
 void runCudaFunction() {
-    CHECK(cudaKernel<<<2, 2>>>());
+    cudaKernel<<<2, 2>>>();
     CHECK(cudaDeviceSynchronize());
 }

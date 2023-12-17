@@ -1,4 +1,4 @@
-#include "./HW0.cuh"
+#include "./HW0_P1.cuh"
 
 void printDeviceInfo()
 {

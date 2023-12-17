@@ -28,7 +28,8 @@
 #include "./src/kernel/Check.cuh"
 #include "./src/kernel/GpuTimer.cuh"
 #include "./src/kernel/cuda_file.cuh"  
-#include "./src/kernel/HW0.cuh"
+#include "./src/kernel/HW0_P1.cuh"
+#include "./src/kernel/HW0_P2.cuh"
 
 int main() {
     std::cout << "Hello, world!" << std::endl;
@@ -36,6 +37,9 @@ int main() {
     // Call the CUDA function
     runCudaFunction();
     printDeviceInfo();
+
+    // HW0_P2
+    HW0_P2();
     
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
