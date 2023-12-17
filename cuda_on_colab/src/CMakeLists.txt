@@ -12,3 +12,4 @@ add_library(MiniDNNLib ${DIR_LIB_SRCS})
 file(GLOB_RECURSE CUDA_FILES "kernel/*.cu")
 cuda_add_library(MiniDNNLibCUDA ${CUDA_FILES})
 target_link_libraries(MiniDNNLib MiniDNNLibCUDA)
+
