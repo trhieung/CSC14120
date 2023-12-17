@@ -25,12 +25,16 @@
 #include "src/optimizer/sgd.h"
 
 // Include CUDA headers
-#include "src/kernel/kernel.cuh"
-#include "src/kernel/kernel.cu"
+#include "./src/kernel/cuda_file.cuh"  
+#include "./src/kernel/HW0.cuh"
 
 int main() {
-  printDeviceInfo();
-  
+    std::cout << "Hello, world!" << std::endl;
+
+    // Call the CUDA function
+    runCudaFunction();
+    printDeviceInfo();
+    
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
   MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
