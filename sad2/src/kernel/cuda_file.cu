@@ -1,4 +1,5 @@
 #include "./cuda_file.cuh"
+#include "./Check.cuh"
 #include <cstdio>
 
 __global__ void cudaKernel() {
@@ -6,6 +7,6 @@ __global__ void cudaKernel() {
 }
 
 void runCudaFunction() {
-    cudaKernel<<<2, 2>>>();
-    cudaDeviceSynchronize();
+    CHECK(cudaKernel<<<2, 2>>>());
+    CHECK(cudaDeviceSynchronize());
 }
