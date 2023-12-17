@@ -45,7 +45,7 @@ int main() {
     // HW0_P2
     std::cout << "Test lab HW0_P2" << std::endl;
     HW0_P2();
-    std::cout << endl;
+    std::cout << std::endl;
     
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
