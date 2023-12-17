@@ -9,7 +9,7 @@ aux_source_directory(. DIR_SRCS)
 add_subdirectory(src)
 
 # Set CUDA architecture (adjust as needed)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-arch=sm_75)
+# set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-arch=sm_75)
 
 # 指定生成目标 
 add_executable(demo ${DIR_SRCS})

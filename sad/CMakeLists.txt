@@ -1,17 +1,17 @@
-cmake_minimum_required(VERSION 3.17)
-project(test)
-set(CMAKE_CXX_STANDARD 17)
-
+cmake_minimum_required (VERSION 3.0)
+project (myproject)
+include_directories ("${PROJECT_SOURCE_DIR}/third_party/eigen")
 find_package(CUDA REQUIRED)
-enable_language("CUDA")
-set(CMAKE_CUDA_STANDARD 14)
-set(CUDA_SEPARABLE_COMPILATION ON)
+# 查找当前目录下的所有源文件
+# 并将名称保存到 DIR_SRCS 变量
+aux_source_directory(. DIR_SRCS)
+# 添加 math 子目录
+add_subdirectory(src)
 
-string(APPEND CMAKE_CUDA_FLAGS " -rdc=true --cudart shared")
+# Set CUDA architecture (adjust as needed)
+# set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-arch=sm_75)
 
-add_library(CUDA_COMP SHARED header.cuh kernel.cu)
-set_property(TARGET CUDA_COMP PROPERTY CUDA_ARCHITECTURES 86-real 86-virtual)
-
-add_executable(main main.cpp)
-
-target_link_libraries(main CUDA_COMP)
+# 指定生成目标 
+add_executable(demo ${DIR_SRCS})
+# 添加链接库
+target_link_libraries(demo MiniDNNLib)
