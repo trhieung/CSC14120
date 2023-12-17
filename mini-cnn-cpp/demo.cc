@@ -24,19 +24,32 @@
 #include "src/optimizer.h"
 #include "src/optimizer/sgd.h"
 
-#include<stdio.h>
-
 // Include CUDA headers
-#include <cuda_runtime.h>
-#include "src/kernel/kernel.h"
-#include "src/kernel/kernel.cc"
+#include "./src/kernel/Check.cuh"
+#include "./src/kernel/GpuTimer.cuh"
+#include "./src/kernel/cuda_file.cuh"  
+#include "./src/kernel/HW0_P1.cuh"
+#include "./src/kernel/HW0_P2.cuh"
 
 int main() {
-  printDeviceInfo();
-  
+    std::cout << "Say hi from project" << std::endl;
+    std::cout << "Hello, world!" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Test simpple kernel" << std::endl;
+    // Call the CUDA function
+    runCudaFunction();
+    printDeviceInfo();
+    std::cout << std::endl;
+
+    // HW0_P2
+    std::cout << "Test lab HW0_P2" << std::endl;
+    HW0_P2();
+    std::cout << std::endl;
+    
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
-  MNIST dataset("CSC14120/mini-cnn-cpp/data/fashion-mnist/");
+  MNIST dataset("CSC14120/sad2/data/fashion-mnist/");
   dataset.read();
   int n_train = dataset.train_data.cols();
   int dim_in = dataset.train_data.rows();
