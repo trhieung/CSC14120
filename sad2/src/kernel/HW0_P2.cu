@@ -27,7 +27,7 @@ __global__ void addVecOnDeviceVersion2(float* in1, float* in2, float* out, int n
     }
 }
 
-void addVec(float* in1, float* in2, float* out, int n, int ver=0)
+void addVec(float* in1, float* in2, float* out, int n, int ver)
 {
     GpuTimer timer;
 
