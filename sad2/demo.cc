@@ -32,14 +32,20 @@
 #include "./src/kernel/HW0_P2.cuh"
 
 int main() {
+    std::cout << "Say hi from project" << std::endl;
     std::cout << "Hello, world!" << std::endl;
+    std::cout << std::endl;
 
+    std::cout << "Test simpple kernel" << std::endl;
     // Call the CUDA function
     runCudaFunction();
     printDeviceInfo();
+    std::cout << std::endl;
 
     // HW0_P2
+    std::cout << "Test lab HW0_P2" << std::endl;
     HW0_P2();
+    std::cout << endl;
     
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
