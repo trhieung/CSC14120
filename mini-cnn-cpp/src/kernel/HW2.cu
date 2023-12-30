@@ -153,8 +153,8 @@ void HW2_P1(){
 
     // Reduce using device, kernel1
     dim3 blockSize(1024); // Default
-    if (argc == 2)
-    	blockSize.x = atoi(argv[1]); 
+    // if (argc == 2)
+    // 	blockSize.x = atoi(argv[1]); 
  	
 	int result1 = reduce(in, n, true, blockSize, 1);
     checkCorrectness(result1, correctResult);
@@ -332,11 +332,11 @@ void HW2_P2(){
 	printf("\n");
 
 	dim3 blockSize(32, 32); // Default
-	if (argc == 3)
-	{
-		blockSize.x = atoi(argv[1]);
-		blockSize.y = atoi(argv[2]);
-	} 
+	// if (argc == 3)
+	// {
+	// 	blockSize.x = atoi(argv[1]);
+	// 	blockSize.y = atoi(argv[2]);
+	// } 
     // Add in1 & in2 on device
 	printf("Basic Matrix Multiplication:\n");
     matrix_multiplication(h_A, h_B, h_C, m, n, k, true,blockSize,1);
