@@ -62,7 +62,7 @@ __global__ void reduceBlksKernel3(int * in, int * out,int n)
 }
 
 int reduce(int const * in, int n,
-        bool useDevice=false, dim3 blockSize=dim3(1), int kernelType=1)
+        bool useDevice=false, dim3 blockSize=dim3(1), int kernelType)
 {
 
 	GpuTimer timer;
@@ -228,7 +228,7 @@ __global__ void matrix_multiplication_kernel2(float* A, float* B, float* C, int 
 }
 
 void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
-    bool useDevice = false, dim3 blockSize = dim3(1),int kernelType=1)
+    bool useDevice = false, dim3 blockSize = dim3(1),int kernelType)
 {
     GpuTimer timer;
     timer.Start();
