@@ -28,7 +28,7 @@
 #include "./src/kernel/Check.cuh"
 #include "./src/kernel/GpuTimer.cuh"
 #include "./src/kernel/HW0.cuh"
-#include "./src/kernel/HW1.cuh"
+#include "./src/kernel/HW2.cuh"
 
 int main() {
     std::cout << "Say hi from project" << std::endl;

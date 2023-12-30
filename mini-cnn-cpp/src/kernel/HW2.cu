@@ -352,7 +352,5 @@ void HW2_P2(){
     free(h_B);
     free(h_C);
     free(correct_C);
-
-    return 0;
 }
 

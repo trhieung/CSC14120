@@ -5,6 +5,7 @@
 #include <math.h>
 #include"./Check.cuh"
 #include"./GpuTimer.cuh"
+#define TILE_WIDTH 32
 
 void printDeviceInfo();
 

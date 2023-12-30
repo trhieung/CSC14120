@@ -1,4 +1,4 @@
-#include "./HW0_P2.cuh"
+#include "./HW0.cuh"
 
 void addVecOnHost(float* in1, float* in2, float* out, int n)
 {
