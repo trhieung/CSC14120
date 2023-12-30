@@ -157,15 +157,15 @@ void HW2_P1(){
     // 	blockSize.x = atoi(argv[1]); 
  	
 	int result1 = reduce(in, n, true, blockSize, 1);
-    checkCorrectness(result1, correctResult);
+    HW2_P1_checkCorrectness(result1, correctResult);
 
     // Reduce using device, kernel2
     int result2 = reduce(in, n, true, blockSize, 2);
-    checkCorrectness(result2, correctResult);
+    HW2_P1_checkCorrectness(result2, correctResult);
 
     // Reduce using device, kernel3
     int result3 = reduce(in, n, true, blockSize, 3);
-    checkCorrectness(result3, correctResult);
+    HW2_P1_checkCorrectness(result3, correctResult);
 
     // Free memories
     free(in);
@@ -340,12 +340,12 @@ void HW2_P2(){
     // Add in1 & in2 on device
 	printf("Basic Matrix Multiplication:\n");
     matrix_multiplication(h_A, h_B, h_C, m, n, k, true,blockSize,1);
-	float err = checkCorrectness(h_C, correct_C,m*k);
+	float err = HW2_P2_checkCorrectness(h_C, correct_C,m*k);
 	printf("Error between device result and host result: %f\n\n", err);
 
 	printf("Shared memory Matrix Multiplication:\n");
     matrix_multiplication(h_A, h_B, h_C, m, n, k, true,blockSize,2);
-	err = checkCorrectness(h_C, correct_C,m*k);
+	err = HW2_P2_checkCorrectness(h_C, correct_C,m*k);
 	printf("Error between device result and host result: %f", err);	
 	
     free(h_A);
