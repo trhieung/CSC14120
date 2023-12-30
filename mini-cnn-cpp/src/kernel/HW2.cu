@@ -286,7 +286,7 @@ void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
         useDevice == true ? "use device" : "use host", time);
 }
 
-float checkCorrectness(float * a1, float* a2, int n)
+float HW2_P2_checkCorrectness(float * a1, float* a2, int n)
 {
 	float err = 0;
 	for (int i = 0; i < n; i++)	
