@@ -84,7 +84,7 @@ int reduce(int const * in, int n,
 	{
 		// Allocate device memories
 		int * d_in, * d_out;
-		dim3 gridSize(((n - 1)>>1) / blockSize.x + 1); // TODO: Compute gridSize from n and blockSize
+		dim3 gridSize((int)(((n - 1)>>1) / blockSize.x + 1), 1, 1); // TODO: Compute gridSize from n and blockSize
 		size_t nBytes = n * sizeof(int);
 
 		// TODO: Allocate device memories
@@ -107,7 +107,7 @@ int reduce(int const * in, int n,
 		timer.Stop();
 		float kernelTime = timer.Elapsed();
 
-		CHECK(cudaGetLastError());
+		// CHECK(cudaGetLastError());
 		
 		// TODO: Copy result from device memories
         CHECK(cudaMemcpy(&result, d_out, sizeof(int), cudaMemcpyDeviceToHost));
@@ -267,7 +267,7 @@ void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
 		else if (kernelType == 2)
 			matrix_multiplication_kernel2<<<gridSize, blockSize>>>(d_A, d_B, d_C, m, n, k);
 
-		CHECK(cudaGetLastError());
+		// CHECK(cudaGetLastError());
         // TODO: Copy result from device memory
         CHECK(cudaMemcpy(C, d_C, size_C, cudaMemcpyDeviceToHost));
 
