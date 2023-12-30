@@ -124,7 +124,6 @@ int reduce(int const * in, int n,
 
 	return result;
 }
-
 void HW2_P1_checkCorrectness(int r1, int r2)
 {
 	if (r1 == r2)
