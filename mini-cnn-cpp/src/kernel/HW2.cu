@@ -93,8 +93,6 @@ int reduce(int const * in, int n,
 
 		// TODO: Copy data to device memories
         CHECK(cudaMemcpy(d_in, in, nBytes, cudaMemcpyHostToDevice));
-        printf("Grid Size: (%d, %d, %d)\n", gridSize.x, gridSize.y, gridSize.z);
-        printf("Block Size: (%d, %d, %d)\n", blockSize.x, blockSize.y, blockSize.z);
 
         
 		// Call kernel
@@ -110,7 +108,7 @@ int reduce(int const * in, int n,
 		timer.Stop();
 		float kernelTime = timer.Elapsed();
 
-		CHECK(cudaGetLastError());
+		// CHECK(cudaGetLastError());
 		
 		// TODO: Copy result from device memories
         CHECK(cudaMemcpy(&result, d_out, sizeof(int), cudaMemcpyDeviceToHost));
@@ -270,7 +268,7 @@ void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
 		else if (kernelType == 2)
 			matrix_multiplication_kernel2<<<gridSize, blockSize>>>(d_A, d_B, d_C, m, n, k);
 
-		CHECK(cudaGetLastError());
+		// CHECK(cudaGetLastError());
         // TODO: Copy result from device memory
         CHECK(cudaMemcpy(C, d_C, size_C, cudaMemcpyDeviceToHost));
 
