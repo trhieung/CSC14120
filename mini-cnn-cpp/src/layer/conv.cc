@@ -68,7 +68,7 @@ void Conv::forward(const Matrix& bottom) {
     float* _correct_result = result.data();
     float* _result = new float[height_out * width_out*channel_out];
     matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,(32, 32),2);
-    err = HW2_P2_checkCorrectness(_result, _correct_result,height_out * width_out*channel_out);
+    float err = HW2_P2_checkCorrectness(_result, _correct_result,height_out * width_out*channel_out);
 
     delete[] _result;
 	  printf("Error between device result and host result: %f", err);	
