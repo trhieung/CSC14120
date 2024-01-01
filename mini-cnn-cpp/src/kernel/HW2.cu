@@ -277,8 +277,8 @@ void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
         CHECK(cudaFree(d_B));
         CHECK(cudaFree(d_C));
         
-		printf("Grid size: %d * %d, block size: %d * %d\n", 
-			gridSize.x,gridSize.y, blockSize.x,blockSize.y);
+		// printf("Grid size: %d * %d, block size: %d * %d\n", 
+		// 	gridSize.x,gridSize.y, blockSize.x,blockSize.y);
     }
     timer.Stop();
     float time = timer.Elapsed();

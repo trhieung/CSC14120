@@ -50,80 +50,6 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
-// void Conv::forward(const Matrix& bottom) {
-//   int n_sample = bottom.cols();
-//   top.resize(height_out * width_out * channel_out, n_sample);
-//   data_cols.resize(n_sample);
-//   for (int i = 0; i < n_sample; i ++) {
-//     // im2col
-//     Matrix data_col;
-//     im2col(bottom.col(i), data_col);
-//     data_cols[i] = data_col;
-//     // conv by product
-//     // Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-//     // To do
-//     // Matrix a(3, 3);
-//     // // Fill 'a' with some values for demonstration
-//     // a << 1, 2, 3,
-//     //      4, 5, 6,
-//     //      7, 8, 9;
-
-//     // // Convert the Eigen vector to a float* using data()
-//     // Matrix b = a.transpose();
-//     // float* _a = a.data();
-//     // float* _b = b.data();
-
-//     // // Print the elements using the float*
-//     // std::cout << "Elements using float* a: ";
-//     // for (int i = 0; i < a.size(); ++i) {
-//     //     std::cout << _a[i] << " ";
-//     // }
-//     // std::cout << std::endl;
-//     // std::cout << "Elements using float* b: ";
-//     // for (int i = 0; i < b.size(); ++i) {
-//     //     std::cout << _b[i] << " ";
-//     // }
-//     // std::cout << std::endl;
-//     // std::cout << "Matrix a:\n" << a << std::endl;
-//     // std::cout << "Matrix b:\n" << b << std::endl;
-//     // float data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};  // Example data
-//     // float* floatPtr = data;  // Assuming 'floatPtr' points to the data array
-
-//     // // Specify the size of the matrix
-//     // int rows = 3;
-//     // int cols = 3;
-
-//     // // Create a matrix by mapping the memory pointed to by 'floatPtr'
-//     // Matrix matrixFromFloatPtr = Eigen::Map<Matrix>(floatPtr, rows, cols);
-//     // Matrix x = matrixFromFloatPtr.transpose();
-//     // // Print the matrix
-//     // std::cout << "Matrix from float*:\n" << x << std::endl;
-//     // return;
-
-//     dim3 blockSize(32, 32);
-//     Matrix data_col_t  = data_col.transpose();
-//     Matrix result_t;
-//     Mstrix result;
-//     Matrix weight_t = weight.transpose();
-//     float* _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
-//     float* _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
-//     float* _correct_result = result_t.data();
-//     float* _result = new float[height_out * width_out*channel_out];
-//     matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
-//     result_t = Eigen::Map<Matrix>(_result, height_out * width_out, channel_out);
-//     result = result_t.transpose();
-//     // float err = HW2_P2_checkCorrectness(_result, _correct_result,height_out * width_out*channel_out);
-// 	  // printf("Error between device result and host result: %f", err);	
-//     // std::cout << _data_col[0] << std::endl;
-//     // std::cout << data_col(0, 0) << std::endl;
-//     // delete[] _result;
-//     // return;
-//     // printDeviceInfo();
-//     result.rowwise() += bias.transpose();
-//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-//   }
-// }
-
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   top.resize(height_out * width_out * channel_out, n_sample);
@@ -134,11 +60,85 @@ void Conv::forward(const Matrix& bottom) {
     im2col(bottom.col(i), data_col);
     data_cols[i] = data_col;
     // conv by product
-    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+    // Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+    // To do
+    // Matrix a(3, 3);
+    // // Fill 'a' with some values for demonstration
+    // a << 1, 2, 3,
+    //      4, 5, 6,
+    //      7, 8, 9;
+
+    // // Convert the Eigen vector to a float* using data()
+    // Matrix b = a.transpose();
+    // float* _a = a.data();
+    // float* _b = b.data();
+
+    // // Print the elements using the float*
+    // std::cout << "Elements using float* a: ";
+    // for (int i = 0; i < a.size(); ++i) {
+    //     std::cout << _a[i] << " ";
+    // }
+    // std::cout << std::endl;
+    // std::cout << "Elements using float* b: ";
+    // for (int i = 0; i < b.size(); ++i) {
+    //     std::cout << _b[i] << " ";
+    // }
+    // std::cout << std::endl;
+    // std::cout << "Matrix a:\n" << a << std::endl;
+    // std::cout << "Matrix b:\n" << b << std::endl;
+    // float data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};  // Example data
+    // float* floatPtr = data;  // Assuming 'floatPtr' points to the data array
+
+    // // Specify the size of the matrix
+    // int rows = 3;
+    // int cols = 3;
+
+    // // Create a matrix by mapping the memory pointed to by 'floatPtr'
+    // Matrix matrixFromFloatPtr = Eigen::Map<Matrix>(floatPtr, rows, cols);
+    // Matrix x = matrixFromFloatPtr.transpose();
+    // // Print the matrix
+    // std::cout << "Matrix from float*:\n" << x << std::endl;
+    // return;
+
+    dim3 blockSize(32, 32);
+    Matrix data_col_t  = data_col.transpose();
+    Matrix result_t;
+    Matrix result;
+    Matrix weight_t = weight.transpose();
+    float* _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
+    float* _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
+    float* _correct_result = result_t.data();
+    float* _result = new float[height_out * width_out*channel_out];
+    matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+    result = result_t.transpose();
+    // float err = HW2_P2_checkCorrectness(_result, _correct_result,height_out * width_out*channel_out);
+	  // printf("Error between device result and host result: %f", err);	
+    // std::cout << _data_col[0] << std::endl;
+    // std::cout << data_col(0, 0) << std::endl;
+    // delete[] _result;
+    // return;
+    // printDeviceInfo();
     result.rowwise() += bias.transpose();
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
   }
 }
+
+// void Conv::forward(const Matrix& bottom) {
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
+//   for (int i = 0; i < n_sample; i ++) {
+//     // im2col
+//     Matrix data_col;
+//     im2col(bottom.col(i), data_col);
+//     data_cols[i] = data_col;
+//     // conv by product
+//     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+//     result.rowwise() += bias.transpose();
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
+// }
 
 // col2im, used for grad_bottom
 // data_col size: Matrix (hw_out, hw_kernel * channel_in)
