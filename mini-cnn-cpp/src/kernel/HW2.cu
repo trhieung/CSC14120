@@ -282,8 +282,8 @@ void matrix_multiplication(float* A, float* B, float* C, int m, int n, int k,
     }
     timer.Stop();
     float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n",
-        useDevice == true ? "use device" : "use host", time);
+    // printf("Processing time (%s): %f ms\n",
+    //     useDevice == true ? "use device" : "use host", time);
 }
 
 float HW2_P2_checkCorrectness(float * a1, float* a2, int n)
