@@ -50,69 +50,27 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
-void Conv::forward(const Matrix& bottom) {
-  GpuTimer timer;
-  timer.Start();
+// void Conv::forward(const Matrix& bottom) {
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
+//   for (int i = 0; i < n_sample; i ++) {
+//     // im2col
+//     Matrix data_col;
+//     im2col(bottom.col(i), data_col);
+//     data_cols[i] = data_col;
+//     // conv by product
+//   GpuTimer timer;
+//   timer.Start();
+//     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+//   timer.Stop();
+//     float time = timer.Elapsed();
+//     printf("Processing time (%s): %f ms\n", "use host", time);
 
-  int n_sample = bottom.cols();
-  top.resize(height_out * width_out * channel_out, n_sample);
-  data_cols.resize(n_sample);
-
-  // paralel init
-  dim3 blockSize(32, 32);
-  Matrix data_col_t;
-  Matrix result_t;
-  Matrix weight_t;
-  Matrix result;
-  float* _data_col;
-  float* _weight;
-  float* _correct_result;
-  float* _result = new float[height_out * width_out*channel_out];
-
-  for (int i = 0; i < n_sample; i ++) {
-    // im2col
-    Matrix data_col;
-    im2col(bottom.col(i), data_col);
-    data_cols[i] = data_col;
-    // conv by product
-    data_col_t  = data_col.transpose();
-    weight_t = weight.transpose();
-    _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
-    _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
-    _correct_result = result_t.data();
-    matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
-    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
-    result = result_t.transpose();
-    result.rowwise() += bias.transpose();
-    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  }
-  delete[] _result;
-  timer.Stop();
-    float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n", "use device", time);
-}
-
-void Conv::forward(const Matrix& bottom) {
-  GpuTimer timer;
-  timer.Start();
-  int n_sample = bottom.cols();
-  top.resize(height_out * width_out * channel_out, n_sample);
-  data_cols.resize(n_sample);
-  for (int i = 0; i < n_sample; i ++) {
-    // im2col
-    Matrix data_col;
-    im2col(bottom.col(i), data_col);
-    data_cols[i] = data_col;
-    // conv by product
-    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-    result.rowwise() += bias.transpose();
-    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  }
-
-  timer.Stop();
-    float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n", "use host", time);
-}
+//     result.rowwise() += bias.transpose();
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
+// }
 
 // col2im, used for grad_bottom
 // data_col size: Matrix (hw_out, hw_kernel * channel_in)
@@ -205,33 +163,49 @@ std::vector<float> Conv::get_derivatives() const {
 }
 
 //---------------------------------------------------------------
-// im2col, used for bottom
-// image size: Vector (height_in * width_in * channel_in)
-// data_col size: float* (hw_out * hw_kernel * channel_in)
-void Conv::im2col_v1(const Vector& image, float* data_col) {
-  int hw_in = height_in * width_in;
-  int hw_kernel = height_kernel * width_kernel;
-  int hw_out = height_out * width_out;
-  // im2col
-  for (int c = 0; c < channel_in; c ++) {
-    Vector map = image.block(hw_in * c, 0, hw_in, 1);  // c-th channel map
-    for (int i = 0; i < hw_out; i ++) {
-      int step_h = i / width_out;
-      int step_w = i % width_out;
-      int start_idx = step_h * width_in * stride + step_w * stride;  // left-top idx of window
-      for (int j = 0; j < hw_kernel; j ++) {
-        int cur_col = start_idx % width_in + j % width_kernel - pad_w;  // col after padding
-        int cur_row = start_idx / width_in + j / width_kernel - pad_h;
-        if (cur_col < 0 || cur_col >= width_in || cur_row < 0 ||
-            cur_row >= height_in) {
-          data_col[i*hw_kernel * channel_in + c * hw_kernel + j] = 0;
-        }
-        else {
-          //int pick_idx = start_idx + (j / width_kernel) * width_in + j % width_kernel;
-          int pick_idx = cur_row * width_in + cur_col;
-          data_col[i*hw_kernel * channel_in + c * hw_kernel + j] = map(pick_idx);  // pick which pixel
-        }
-      }
-    }
+
+void Conv::forward(const Matrix& bottom) {
+
+  int n_sample = bottom.cols();
+  top.resize(height_out * width_out * channel_out, n_sample);
+  data_cols.resize(n_sample);
+
+  // paralel init
+  dim3 blockSize(32, 32);
+  Matrix data_col_t;
+  Matrix result_t;
+  Matrix weight_t;
+  Matrix result;
+  float* _data_col;
+  float* _weight;
+  float* _correct_result;
+  float* _result = new float[height_out * width_out*channel_out];
+
+  for (int i = 0; i < n_sample; i ++) {
+    // im2col
+    Matrix data_col;
+    im2col(bottom.col(i), data_col);
+    data_cols[i] = data_col;
+    // conv by product
+    data_col_t  = data_col.transpose();
+    weight_t = weight.transpose();
+    _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
+    _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
+    _correct_result = result_t.data();
+    
+    GpuTimer timer;
+    timer.Start();
+
+    matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+
+    timer.Stop();
+    float time = timer.Elapsed();
+    printf("Processing time (%s): %f ms\n", "use device", time);
+
+    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+    result = result_t.transpose();
+    result.rowwise() += bias.transpose();
+    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
   }
+  delete[] _result;
 }
