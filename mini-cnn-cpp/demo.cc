@@ -31,21 +31,21 @@
 #include "./src/kernel/HW2.cuh"
 
 int main() {
-    std::cout << "Say hi from project" << std::endl;
+    // std::cout << "Say hi from project" << std::endl;
     
-    // HW0
-    std::cout << "Test lab HW0_P2" << std::endl;
-    HW0_P2();
-    std::cout << std::endl;
+    // // HW0
+    // std::cout << "Test lab HW0_P2" << std::endl;
+    // HW0_P2();
+    // std::cout << std::endl;
 
-    // HW2
-    std::cout << "Test lab HW2_P1" << std::endl;
-    HW2_P1();
-    std::cout << std::endl;
+    // // HW2
+    // std::cout << "Test lab HW2_P1" << std::endl;
+    // HW2_P1();
+    // std::cout << std::endl;
 
-    std::cout << "Test lab HW2_P2" << std::endl;
-    HW2_P2();
-    std::cout << std::endl;
+    // std::cout << "Test lab HW2_P2" << std::endl;
+    // HW2_P2();
+    // std::cout << std::endl;
     
   // data
   // MNIST dataset("CSC14120/mini-cnn-cpp/data/mnist/");
