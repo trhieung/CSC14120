@@ -49,7 +49,7 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
     }
   }
 }
-
+typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   top.resize(height_out * width_out * channel_out, n_sample);
@@ -61,7 +61,18 @@ void Conv::forward(const Matrix& bottom) {
     data_cols[i] = data_col;
     // conv by product
     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-    printDeviceInfo()
+    // To do
+    // dim3 blockSize(32, 32);
+    float* _data_col = data_col.data(); //(hw_out, hw_kernel * channel_in)
+    float* _weight = weight.data();     //(channel_in * height_kernel * width_kernel, channel_out)
+    float* _correct_result = result.data();
+    float* _result = new float[height_out * width_out*channel_out];
+    matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,(32, 32),2);
+    err = HW2_P2_checkCorrectness(_result, _correct_result,height_out * width_out*channel_out);
+
+    delete[] _result;
+	  printf("Error between device result and host result: %f", err);	
+    // printDeviceInfo();
     result.rowwise() += bias.transpose();
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
   }
