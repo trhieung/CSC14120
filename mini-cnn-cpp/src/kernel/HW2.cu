@@ -419,35 +419,3 @@ __global__ void im2col_kernel(const float* image, float* data_col, int height_in
         }
     }
 }
-
-void im2col_gpu(const Vector& image, Matrix& data_col_gpu) {
-    int hw_in = height_in * width_in;
-    int hw_kernel = height_kernel * width_kernel;
-    int hw_out = height_out * width_out;
-
-    // Allocate GPU memory
-    float *image_gpu, *data_col_gpu_ptr;
-    cudaMalloc((void**)&image_gpu, sizeof(float) * image.size());
-    cudaMalloc((void**)&data_col_gpu_ptr, sizeof(float) * hw_out * hw_kernel * channel_in);
-
-    // Copy input data to GPU
-    cudaMemcpy(image_gpu, image.data(), sizeof(float) * image.size(), cudaMemcpyHostToDevice);
-
-    // Define block and grid dimensions
-    dim3 threadsPerBlock(16, 16);
-    dim3 blocksPerGrid(channel_in, (hw_out + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    // Launch GPU kernel
-    im2col_kernel<<<blocksPerGrid, threadsPerBlock>>>(image_gpu, data_col_gpu_ptr, height_in, width_in,
-                                                        channel_in, height_kernel, width_kernel,
-                                                        height_out, width_out, stride, pad_h, pad_w);
-
-    // Copy result back to CPU
-    data_col_gpu.resize(hw_out, hw_kernel * channel_in);
-    cudaMemcpy(data_col_gpu.data(), data_col_gpu_ptr, sizeof(float) * data_col_gpu.size(),
-                cudaMemcpyDeviceToHost);
-
-    // Free GPU memory
-    cudaFree(image_gpu);
-    cudaFree(data_col_gpu_ptr);
-}
