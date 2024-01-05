@@ -32,4 +32,10 @@ float HW2_P2_checkCorrectness(float * a1, float* a2, int n);
 
 void HW2_P2();
 
+//add more
+__global__ void im2col_kernel(const float* image, float* data_col, int height_in, int width_in, int channel_in,
+                                int height_kernel, int width_kernel, int height_out, int width_out,
+                                int stride, int pad_h, int pad_w);
+void im2col_gpu(const Vector& image, Matrix& data_col_gpu);
+
 #endif // HW2_H
