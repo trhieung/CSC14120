@@ -50,60 +50,30 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
     }
   }
 }
-#include <iostream>
-#include <cmath>
 
-// Check function to compare GPU and CPU im2col results
-bool checkIm2Col(const Matrix& cpu_result, const float* gpu_result, int size) {
-  int cnt = 0;
-    for (int i = 0; i < size; ++i) {
-        if (std::abs(cpu_result(i) - gpu_result[i]) > 1e-5) {
-            std::cout << "Mismatch at index " << i << ": CPU = " << cpu_result(i)
-                      << ", GPU = " << gpu_result[i] << std::endl;
-            return false;
-            // cnt++;
-        }
-    }
-    // std::cout << "Results match!" << std::endl;
-    // std::cout << "hihi: " << cnt << std::endl;
-    return true;
-}
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
+  int size_image = height_in * width_in * channel_in;
+  int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
   top.resize(height_out * width_out * channel_out, n_sample);
   data_cols.resize(n_sample);
+
+  // paralel init
+  dim3 blockSize(32, 32);
+  Matrix data_col;
+  Matrix data_col_t;
+  Matrix result_t;
+  Matrix weight_t = weight.transpose();
+  Matrix result;
+  float* _data_col_gpu = new float[size_data_col];
+  float* _weight = weight_t.data();
+  float* _correct_result;
+  float* _result = new float[height_out * width_out*channel_out];
+
   for (int i = 0; i < n_sample; i ++) {
-    // im2col
-    Matrix data_col;
-    im2col(bottom.col(i), data_col);
-
-    data_cols[i] = data_col;
-    std::cout << "huhu" << std::endl;
-    // std::cout << data_col.row(10) << std::endl << std::endl;
-    Matrix T = data_col.transpose();
-    float* p = T.data();
-    int _v = height_kernel * width_kernel * channel_in;
-    int myrow = 163;
-
-
-    // Matrix A(4, 5);
-    // A << 1, 2, 3, 4, 5,
-    //     6, 7, 8, 9, 10,
-    //     11, 12, 13, 14, 15,
-    //     16, 17, 18, 19, 20;
-
-    // // Print the matrix
-    // std::cout << "Matrix A (4x5):\n" << A << std::endl << std::endl;
-    // std::cout << A.row(2) << std::endl << std::endl;
-    // for(int i = 0; i < 5; i++){
-    //   std::cout << p[2*5 +i ]<< " ";
-    // }
-    // test
-    // GPU
+    // im2col gpu
     float* d_image;
     float* d_data_col;
-    int size_image = height_in * width_in * channel_in;
-    int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
 
     // Allocate GPU memory
     cudaMalloc((void**)&d_image, size_image * sizeof(float));
@@ -120,34 +90,29 @@ void Conv::forward(const Matrix& bottom) {
               channel_in, stride, pad_h, pad_w);
 
     // Transfer data from GPU to CPU
-    float* data_col_gpu = new float[size_data_col];
-    cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
-
-    // for(int i = 0; i < _v; i++){
-    //   std::cout << p[myrow*_v + i]<< " ";
-    // }
-    // std::cout << std::endl << std::endl;
-
-    // for(int i = 0; i < _v; i++){
-    //   std::cout << data_col_gpu[myrow*_v + i]<< " ";
-    // }
-    // std::cout << std::endl << std::endl;
-
-    // Check results
-    checkIm2Col(T, data_col_gpu, size_data_col);
+    cudaMemcpy(_data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+    
+    // convert to Matrix
+    data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
+    data_col = data_col_t.transpose();
 
     // Free GPU memory
     cudaFree(d_image);
     cudaFree(d_data_col);
-    delete[] data_col_gpu;
-
-    std::cout << std::endl << std::endl;
-    // conv by product
-    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-
+    
+    // conv by product gpu
+    matrix_multiplication(_data_col_gpu, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+    result = result_t.transpose();    
+    
     result.rowwise() += bias.transpose();
+
+    data_cols[i] = data_col;
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
   }
+
+  delete[] _data_col_gpu;
+  delete[] _result;
 }
 
 // col2im, used for grad_bottom
@@ -241,9 +206,26 @@ std::vector<float> Conv::get_derivatives() const {
 }
 
 //---------------------------------------------------------------
+// #include <iostream>
+// #include <cmath>
+
+// // Check function to compare GPU and CPU im2col results
+// bool checkIm2Col(const Matrix& cpu_result, const float* gpu_result, int size) {
+//   int cnt = 0;
+//     for (int i = 0; i < size; ++i) {
+//         if (std::abs(cpu_result(i) - gpu_result[i]) > 1e-5) {
+//             std::cout << "Mismatch at index " << i << ": CPU = " << cpu_result(i)
+//                       << ", GPU = " << gpu_result[i] << std::endl;
+//             return false;
+//             // cnt++;
+//         }
+//     }
+//     // std::cout << "Results match!" << std::endl;
+//     // std::cout << "hihi: " << cnt << std::endl;
+//     return true;
+// }
 
 // void Conv::forward(const Matrix& bottom) {
-
 //   int n_sample = bottom.cols();
 //   top.resize(height_out * width_out * channel_out, n_sample);
 //   data_cols.resize(n_sample);
@@ -286,4 +268,64 @@ std::vector<float> Conv::get_derivatives() const {
 //     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 //   }
 //   delete[] _result;
+// }
+
+
+// void Conv::forward(const Matrix& bottom) {
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
+//   for (int i = 0; i < n_sample; i ++) {
+//     // im2col gpu
+//     int _v = height_kernel * width_kernel * channel_in;
+//     float* d_image;
+//     float* d_data_col;
+//     int size_image = height_in * width_in * channel_in;
+//     int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
+
+//     // Allocate GPU memory
+//     cudaMalloc((void**)&d_image, size_image * sizeof(float));
+//     cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
+
+//     // Transfer data from CPU to GPU
+//     cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
+
+//     // Call GPU im2col function
+//     im2col_gpu(d_image, d_data_col,
+//               height_in, width_in,
+//               height_kernel, width_kernel,
+//               height_out, width_out,
+//               channel_in, stride, pad_h, pad_w);
+
+//     // Transfer data from GPU to CPU
+//     float* data_col_gpu = new float[size_data_col];
+//     cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+    
+//     // Check results
+//     Matrix data_col = Eigen::Map<Matrix>(data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
+//     Matrix hehe;
+//     im2col(bottom.col(i), hehe);
+//     std::cout << "bruhh" << std::endl;
+//     // std::cout << data_col.row(10) << std::endl << std::endl;
+//     Matrix T = hehe.transpose();
+//     if (data_col == T) {
+//         std::cout << "Matrices are equal." << std::endl;
+//     } else {
+//         std::cout << "Matrices are not equal." << std::endl;
+//     }
+//     std::cout << std::endl;
+//     // Free GPU memory
+//     cudaFree(d_image);
+//     cudaFree(d_data_col);
+//     delete[] data_col_gpu;
+//     std::cout << std::endl;
+//     break;
+//     // conv by product
+//     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+
+//     result.rowwise() += bias.transpose();
+
+//     data_cols[i] = data_col;
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
 // }
