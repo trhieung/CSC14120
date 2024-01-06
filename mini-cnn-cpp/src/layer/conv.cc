@@ -1,6 +1,7 @@
 #include "conv.h"
 #include <math.h>
 #include "../kernel/HW2.cuh"
+#include "../kernel/final.cuh"
 #include <iostream>
 
 void Conv::init() {
@@ -25,8 +26,6 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   int hw_in = height_in * width_in;
   int hw_kernel = height_kernel * width_kernel;
   int hw_out = height_out * width_out;
-  std::cout << height_out << " " << width_out << std::endl;
-  return;
   // im2col
   data_col.resize(hw_out, hw_kernel * channel_in);
   for (int c = 0; c < channel_in; c ++) {
@@ -52,27 +51,31 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
-// void Conv::forward(const Matrix& bottom) {
-//   int n_sample = bottom.cols();
-//   top.resize(height_out * width_out * channel_out, n_sample);
-//   data_cols.resize(n_sample);
-//   for (int i = 0; i < n_sample; i ++) {
-//     // im2col
-//     Matrix data_col;
-//     im2col(bottom.col(i), data_col);
-//     data_cols[i] = data_col;
-//     // conv by product
-//   GpuTimer timer;
-//   timer.Start();
-//     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-//   timer.Stop();
-//     float time = timer.Elapsed();
-//     printf("Processing time (%s): %f ms\n", "use host", time);
+void Conv::forward(const Matrix& bottom) {
+  int n_sample = bottom.cols();
+  top.resize(height_out * width_out * channel_out, n_sample);
+  data_cols.resize(n_sample);
+  for (int i = 0; i < n_sample; i ++) {
+    // im2col
+    Matrix data_col;
+    im2col(bottom.col(i), data_col);
+    data_cols[i] = data_col;
+    // test 
+    std::cout << "Matrix data_col:" << std::endl << data_col << std::endl;
+    break;
 
-//     result.rowwise() += bias.transpose();
-//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-//   }
-// }
+    // conv by product
+    GpuTimer timer;
+    timer.Start();
+    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+    timer.Stop();
+    float time = timer.Elapsed();
+    printf("Processing time (%s): %f ms\n", "use host", time);
+
+    result.rowwise() += bias.transpose();
+    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+  }
+}
 
 // col2im, used for grad_bottom
 // data_col size: Matrix (hw_out, hw_kernel * channel_in)
@@ -166,48 +169,48 @@ std::vector<float> Conv::get_derivatives() const {
 
 //---------------------------------------------------------------
 
-void Conv::forward(const Matrix& bottom) {
+// void Conv::forward(const Matrix& bottom) {
 
-  int n_sample = bottom.cols();
-  top.resize(height_out * width_out * channel_out, n_sample);
-  data_cols.resize(n_sample);
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
 
-  // paralel init
-  dim3 blockSize(32, 32);
-  Matrix data_col_t;
-  Matrix result_t;
-  Matrix weight_t;
-  Matrix result;
-  float* _data_col;
-  float* _weight;
-  float* _correct_result;
-  float* _result = new float[height_out * width_out*channel_out];
+//   // paralel init
+//   dim3 blockSize(32, 32);
+//   Matrix data_col_t;
+//   Matrix result_t;
+//   Matrix weight_t;
+//   Matrix result;
+//   float* _data_col;
+//   float* _weight;
+//   float* _correct_result;
+//   float* _result = new float[height_out * width_out*channel_out];
 
-  for (int i = 0; i < n_sample; i ++) {
-    // im2col
-    Matrix data_col;
-    im2col(bottom.col(i), data_col);
-    data_cols[i] = data_col;
-    // conv by product
-    data_col_t  = data_col.transpose();
-    weight_t = weight.transpose();
-    _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
-    _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
-    _correct_result = result_t.data();
+//   for (int i = 0; i < n_sample; i ++) {
+//     // im2col
+//     Matrix data_col;
+//     im2col(bottom.col(i), data_col);
+//     data_cols[i] = data_col;
+//     // conv by product
+//     data_col_t  = data_col.transpose();
+//     weight_t = weight.transpose();
+//     _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
+//     _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
+//     _correct_result = result_t.data();
     
-    GpuTimer timer;
-    timer.Start();
+//     GpuTimer timer;
+//     timer.Start();
 
-    matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+//     matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
 
-    timer.Stop();
-    float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n", "use device", time);
+//     timer.Stop();
+//     float time = timer.Elapsed();
+//     printf("Processing time (%s): %f ms\n", "use device", time);
 
-    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
-    result = result_t.transpose();
-    result.rowwise() += bias.transpose();
-    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  }
-  delete[] _result;
-}
+//     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+//     result = result_t.transpose();
+//     result.rowwise() += bias.transpose();
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
+//   delete[] _result;
+// }
