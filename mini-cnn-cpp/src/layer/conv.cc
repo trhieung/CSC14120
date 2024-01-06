@@ -74,7 +74,29 @@ void Conv::forward(const Matrix& bottom) {
     Matrix data_col;
     im2col(bottom.col(i), data_col);
     data_cols[i] = data_col;
+    std::cout << "huhu" << std::endl;
+    // std::cout << data_col.row(10) << std::endl << std::endl;
+    Matrix T = data_col.transpose();
+    float* p = T.data();
+    int _v = height_kernel * width_kernel * channel_in;
 
+    for(int i = 0; i < _v; i++){
+      std::cout << p[10*_v + i]<< " ";
+    }
+
+    // Matrix A(4, 5);
+    // A << 1, 2, 3, 4, 5,
+    //     6, 7, 8, 9, 10,
+    //     11, 12, 13, 14, 15,
+    //     16, 17, 18, 19, 20;
+
+    // // Print the matrix
+    // std::cout << "Matrix A (4x5):\n" << A << std::endl << std::endl;
+    // std::cout << A.row(2) << std::endl << std::endl;
+    // for(int i = 0; i < 5; i++){
+    //   std::cout << p[2*5 +i ]<< " ";
+    // }
+    std::cout << std::endl << std::endl;
     // test
     // GPU
     float* d_image;
@@ -99,15 +121,19 @@ void Conv::forward(const Matrix& bottom) {
     // Transfer data from GPU to CPU
     float* data_col_gpu = new float[size_data_col];
     cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+    for(int i = 0; i < _v; i++){
+      std::cout << data_col_gpu[10*_v + i]<< " ";
+    }
 
     // Check results
-    checkIm2Col(data_col_cpu, data_col_gpu, size_data_col);
+    checkIm2Col(T, data_col_gpu, size_data_col);
 
     // Free GPU memory
     cudaFree(d_image);
     cudaFree(d_data_col);
     delete[] data_col_gpu;
 
+    std::cout << std::endl << std::endl;
     // conv by product
     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
 
