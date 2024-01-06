@@ -60,17 +60,38 @@ void Conv::forward(const Matrix& bottom) {
     Matrix data_col;
     im2col(bottom.col(i), data_col);
     data_cols[i] = data_col;
-    // test 
-    std::cout << "Matrix data_col:" << std::endl << data_col << std::endl;
-    break;
+
+    // test
+    float* d_image;
+    float* d_data_col;
+    cudaMalloc((void**)&d_image, sizeof(float) * channel_in * height_in * width_in);
+    cudaMalloc((void**)&d_data_col, sizeof(float) * channel_in * height_out * width_out * height_kernel * width_kernel);
+
+    // Copy input data from CPU to GPU
+    cudaMemcpy(d_image, bottom.col(i).data(), sizeof(float) * channel_in * height_in * width_in, cudaMemcpyHostToDevice);
+
+    // Launch GPU kernel
+    int block_size = 256;
+    int num_blocks = (channel_in * height_out * width_out + block_size - 1) / block_size;
+    im2col_kernel<<<num_blocks, block_size>>>(d_image, d_data_col,
+                                              height_in, width_in,
+                                              height_kernel, width_kernel,
+                                              height_out, width_out,
+                                              channel_in, stride);
+
+    // Copy result from GPU to CPU
+    Matrix d_data_col_host(channel_in * height_out * width_out, height_kernel * width_kernel);
+    cudaMemcpy(d_data_col_host.data(), d_data_col, sizeof(float) * channel_in * height_out * width_out * height_kernel * width_kernel, cudaMemcpyDeviceToHost);
+
+    // Check equality
+    assert(data_col.isApprox(d_data_col_host));
+
+    // Free GPU memory
+    cudaFree(d_image);
+    cudaFree(d_data_col);
 
     // conv by product
-    GpuTimer timer;
-    timer.Start();
     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-    timer.Stop();
-    float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n", "use host", time);
 
     result.rowwise() += bias.transpose();
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
