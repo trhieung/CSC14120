@@ -50,7 +50,21 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
     }
   }
 }
+#include <iostream>
+#include <cmath>
 
+// Check function to compare GPU and CPU im2col results
+bool checkIm2Col(const Matrix& cpu_result, const float* gpu_result, int size) {
+    for (int i = 0; i < size; ++i) {
+        if (std::abs(cpu_result(i) - gpu_result[i]) > 1e-5) {
+            std::cout << "Mismatch at index " << i << ": CPU = " << cpu_result(i)
+                      << ", GPU = " << gpu_result[i] << std::endl;
+            return false;
+        }
+    }
+    std::cout << "Results match!" << std::endl;
+    return true;
+}
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   top.resize(height_out * width_out * channel_out, n_sample);
@@ -62,31 +76,37 @@ void Conv::forward(const Matrix& bottom) {
     data_cols[i] = data_col;
 
     // test
+    // GPU
     float* d_image;
     float* d_data_col;
-    cudaMalloc((void**)&d_image, sizeof(float) * channel_in * height_in * width_in);
-    cudaMalloc((void**)&d_data_col, sizeof(float) * channel_in * height_out * width_out * height_kernel * width_kernel);
+    int size_image = height_in * width_in * channel_in;
+    int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
 
-    // Copy input data from CPU to GPU
-    cudaMemcpy(d_image, bottom.col(i).data(), sizeof(float) * channel_in * height_in * width_in, cudaMemcpyHostToDevice);
+    // Allocate GPU memory
+    cudaMalloc((void**)&d_image, size_image * sizeof(float));
+    cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
 
-    // Launch GPU kernel
-    im2col_gpu(float* d_image, float* d_data_col,
-                int height_in, int width_in,
-                int height_kernel, int width_kernel,
-                int height_out, int width_out,
-                int channel_in, int stride)
+    // Transfer data from CPU to GPU
+    cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
 
-    // Copy result from GPU to CPU
-    Matrix d_data_col_host(channel_in * height_out * width_out, height_kernel * width_kernel);
-    cudaMemcpy(d_data_col_host.data(), d_data_col, sizeof(float) * channel_in * height_out * width_out * height_kernel * width_kernel, cudaMemcpyDeviceToHost);
+    // Call GPU im2col function
+    im2col_gpu(d_image, d_data_col,
+              height_in, width_in,
+              height_kernel, width_kernel,
+              height_out, width_out,
+              channel_in, stride, pad_h, pad_w);
 
-    // Check equality
-    assert(data_col.isApprox(d_data_col_host));
+    // Transfer data from GPU to CPU
+    float* data_col_gpu = new float[size_data_col];
+    cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Check results
+    checkIm2Col(data_col_cpu, data_col_gpu, size_data_col);
 
     // Free GPU memory
     cudaFree(d_image);
     cudaFree(d_data_col);
+    delete[] data_col_gpu;
 
     // conv by product
     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
