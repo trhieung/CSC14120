@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 // Kernel function to perform im2col on GPU
-__global__ void im2col_kernel(float* image, float* data_col,
+__global__ void im2col_kernel(const float* image, float* data_col,
                             int height_in, int width_in,
                             int height_kernel, int width_kernel,
                             int height_out, int width_out,
