@@ -51,6 +51,27 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
+// void Conv::forward(const Matrix& bottom) {
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
+//   for (int i = 0; i < n_sample; i ++) {
+//     GpuTimer timer;
+//     timer.Start();
+//     // im2col
+//     Matrix data_col;
+//     im2col(bottom.col(i), data_col);
+//     data_cols[i] = data_col;
+//     // conv by product
+//     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+//     result.rowwise() += bias.transpose();
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//     timer.Stop();
+//     float time = timer.Elapsed();
+//     printf("Processing time (%s): %f ms\n", "use host", time);
+//   }
+// }
+
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   int size_image = height_in * width_in * channel_in;
@@ -71,6 +92,8 @@ void Conv::forward(const Matrix& bottom) {
   float* _result = new float[height_out * width_out*channel_out];
 
   for (int i = 0; i < n_sample; i ++) {
+    GpuTimer timer;
+    timer.Start();
     // im2col gpu
     float* d_image;
     float* d_data_col;
@@ -96,6 +119,11 @@ void Conv::forward(const Matrix& bottom) {
     data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
     data_col = data_col_t.transpose();
 
+    Matrix T;
+    im2col(bottom.col(i), T);
+    if (T == data_col) std::cout << "hehe" << std:: endl;
+    else std::cout << "huhu" << std::endl;
+
     // Free GPU memory
     cudaFree(d_image);
     cudaFree(d_data_col);
@@ -109,6 +137,9 @@ void Conv::forward(const Matrix& bottom) {
 
     data_cols[i] = data_col;
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+    timer.Stop();
+    float time = timer.Elapsed();
+    printf("Processing time (%s): %f ms\n", "use device", time);
   }
 
   delete[] _data_col_gpu;
