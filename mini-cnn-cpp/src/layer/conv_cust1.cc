@@ -35,6 +35,70 @@ __global__ void im2col_kernel(const float* image, float* data_col,
     }
 }
 
+__global__ void im2col_gpu_kernel(const float* image, float* data_col,
+                                   int height_in, int width_in,
+                                   int channel_in, int height_kernel, int width_kernel,
+                                   int height_out, int width_out,
+                                   int stride, int pad_h, int pad_w) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < height_out * width_out * channel_in) {
+        int c = index / (height_out * width_out);
+        int i_out = (index % (height_out * width_out)) / width_out;
+        int j_out = (index % (height_out * width_out)) % width_out;
+
+        int start_h = i_out * stride - pad_h;
+        int start_w = j_out * stride - pad_w;
+
+        for (int i_kernel = 0; i_kernel < height_kernel; ++i_kernel) {
+            for (int j_kernel = 0; j_kernel < width_kernel; ++j_kernel) {
+                int h = start_h + i_kernel;
+                int w = start_w + j_kernel;
+
+                int image_index = (c * height_in + h) * width_in + w;
+                int data_col_index = (i_out * width_out + j_out) * height_kernel * width_kernel * channel_in +
+                                     (i_kernel * width_kernel + j_kernel) * channel_in + c;
+                
+                // Perform vectorized load and store if possible
+                data_col[data_col_index] = (h >= 0 && h < height_in && w >= 0 && w < width_in) ?
+                                           image[image_index] : 0.0;
+            }
+        }
+    }
+}
+
+void Conv::im2col_gpu(const Vector& image, Matrix& data_col_gpu) {
+    int hw_in = height_in * width_in;
+    int hw_kernel = height_kernel * width_kernel;
+    int hw_out = height_out * width_out;
+
+    // Allocate GPU memory
+    float *image_gpu, *data_col_gpu_ptr;
+    cudaMalloc((void**)&image_gpu, sizeof(float) * image.size());
+    cudaMalloc((void**)&data_col_gpu_ptr, sizeof(float) * hw_out * hw_kernel * channel_in);
+
+    // Copy input data to GPU
+    cudaMemcpy(image_gpu, image.data(), sizeof(float) * image.size(), cudaMemcpyHostToDevice);
+
+    // Define block and grid dimensions
+    dim3 threadsPerBlock(256);  // You can adjust this value based on your GPU's capabilities
+    dim3 blocksPerGrid((hw_out * channel_in + threadsPerBlock.x - 1) / threadsPerBlock.x);
+
+    // Launch GPU kernel
+    im2col_gpu_kernel<<<blocksPerGrid, threadsPerBlock>>>(image_gpu, data_col_gpu_ptr, height_in, width_in,
+                                                          channel_in, height_kernel, width_kernel,
+                                                          height_out, width_out, stride, pad_h, pad_w);
+
+    // Copy result back to CPU
+    data_col_gpu.resize(hw_out, hw_kernel * channel_in);
+    cudaMemcpy(data_col_gpu.data(), data_col_gpu_ptr, sizeof(float) * data_col_gpu.size(),
+               cudaMemcpyDeviceToHost);
+
+    // Free GPU memory
+    cudaFree(image_gpu);
+    cudaFree(data_col_gpu_ptr);
+}
+
 
 __global__ void matrix_multiplication_kernel_cust1(const float* data_col, const float* weight,
                                                    float* result, int height_out, int width_out,

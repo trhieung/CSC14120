@@ -44,8 +44,8 @@ class ConvCust1 : public Layer {
   void forward_gpu(const Matrix& bottom);
   void backward_gpu(const Matrix& bottom, const Matrix& grad_top);
   void update_gpu(Optimizer& opt);
-  void im2col_gpu(const Vector& image, Matrix& data_col);
-  void col2im_gpu(const Matrix& data_col, Vector& image);
+  void im2col_gpu(const Vector& image, Matrix& data_col_gpu);
+  void col2im_gpu(const Matrix& data_col_gpu, Vector& image);
   int output_dim() { return dim_out; }
   std::vector<float> get_parameters() const;
   std::vector<float> get_derivatives() const;
