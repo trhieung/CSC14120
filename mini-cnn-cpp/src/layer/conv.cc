@@ -71,13 +71,11 @@ void Conv::forward(const Matrix& bottom) {
     cudaMemcpy(d_image, bottom.col(i).data(), sizeof(float) * channel_in * height_in * width_in, cudaMemcpyHostToDevice);
 
     // Launch GPU kernel
-    int block_size = 256;
-    int num_blocks = (channel_in * height_out * width_out + block_size - 1) / block_size;
-    im2col_kernel<<<num_blocks, block_size>>>(d_image, d_data_col,
-                                              height_in, width_in,
-                                              height_kernel, width_kernel,
-                                              height_out, width_out,
-                                              channel_in, stride);
+    im2col_gpu(float* d_image, float* d_data_col,
+                int height_in, int width_in,
+                int height_kernel, int width_kernel,
+                int height_out, int width_out,
+                int channel_in, int stride)
 
     // Copy result from GPU to CPU
     Matrix d_data_col_host(channel_in * height_out * width_out, height_kernel * width_kernel);

@@ -41,14 +41,14 @@ void im2col_gpu(float* image, float* data_col,
                 int height_kernel, int width_kernel,
                 int height_out, int width_out,
                 int channel_in, int stride) {
-    // int hw_out = height_out * width_out;
-    // int num_threads = 256;
-    // int num_blocks = (channel_in * hw_out + num_threads - 1) / num_threads;
-    // im2col_kernel<<<num_blocks, num_threads>>>(image, data_col,
-    //                                            height_in, width_in,
-    //                                            height_kernel, width_kernel,
-    //                                            height_out, width_out,
-    //                                            channel_in, stride);
+    int hw_out = height_out * width_out;
+    int blockSize = 256;
+    int num_blocks = (channel_in * hw_out + num_threads - 1) / num_threads;
+    im2col_kernel<<<num_blocks, blockSize>>>(image, data_col,
+                                               height_in, width_in,
+                                               height_kernel, width_kernel,
+                                               height_out, width_out,
+                                               channel_in, stride);
 }
 
 void check() {
