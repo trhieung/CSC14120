@@ -58,14 +58,14 @@ bool checkIm2Col(const Matrix& cpu_result, const float* gpu_result, int size) {
   int cnt = 0;
     for (int i = 0; i < size; ++i) {
         if (std::abs(cpu_result(i) - gpu_result[i]) > 1e-5) {
-            // std::cout << "Mismatch at index " << i << ": CPU = " << cpu_result(i)
-            //           << ", GPU = " << gpu_result[i] << std::endl;
-            // return false;
-            cnt++;
+            std::cout << "Mismatch at index " << i << ": CPU = " << cpu_result(i)
+                      << ", GPU = " << gpu_result[i] << std::endl;
+            return false;
+            // cnt++;
         }
     }
     // std::cout << "Results match!" << std::endl;
-    std::cout << "hihi: " << cnt << std::endl;
+    // std::cout << "hihi: " << cnt << std::endl;
     return true;
 }
 void Conv::forward(const Matrix& bottom) {
@@ -76,16 +76,15 @@ void Conv::forward(const Matrix& bottom) {
     // im2col
     Matrix data_col;
     im2col(bottom.col(i), data_col);
+
     data_cols[i] = data_col;
     std::cout << "huhu" << std::endl;
     // std::cout << data_col.row(10) << std::endl << std::endl;
     Matrix T = data_col.transpose();
     float* p = T.data();
     int _v = height_kernel * width_kernel * channel_in;
+    int myrow = 163;
 
-    for(int i = 0; i < _v; i++){
-      std::cout << p[10*_v + i]<< " ";
-    }
 
     // Matrix A(4, 5);
     // A << 1, 2, 3, 4, 5,
@@ -99,7 +98,6 @@ void Conv::forward(const Matrix& bottom) {
     // for(int i = 0; i < 5; i++){
     //   std::cout << p[2*5 +i ]<< " ";
     // }
-    std::cout << std::endl << std::endl;
     // test
     // GPU
     float* d_image;
@@ -124,9 +122,16 @@ void Conv::forward(const Matrix& bottom) {
     // Transfer data from GPU to CPU
     float* data_col_gpu = new float[size_data_col];
     cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
-    for(int i = 0; i < _v; i++){
-      std::cout << data_col_gpu[10*_v + i]<< " ";
-    }
+
+    // for(int i = 0; i < _v; i++){
+    //   std::cout << p[myrow*_v + i]<< " ";
+    // }
+    // std::cout << std::endl << std::endl;
+
+    // for(int i = 0; i < _v; i++){
+    //   std::cout << data_col_gpu[myrow*_v + i]<< " ";
+    // }
+    // std::cout << std::endl << std::endl;
 
     // Check results
     checkIm2Col(T, data_col_gpu, size_data_col);
