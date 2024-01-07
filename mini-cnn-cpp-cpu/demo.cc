@@ -79,8 +79,8 @@ int main() {
   // SGD opt(0.001);
   const int n_epoch = 5;
   const int batch_size = 128;
-  std::cout << "gpu batch size: " << batch_size << std::endl;
-  
+  std::cout << "cpu batch size: " << batch_size << std::endl;
+
   for (int epoch = 0; epoch < n_epoch; epoch ++) {
     shuffle_data(dataset.train_data, dataset.train_labels);
     for (int start_idx = 0; start_idx < n_train; start_idx += batch_size) {
