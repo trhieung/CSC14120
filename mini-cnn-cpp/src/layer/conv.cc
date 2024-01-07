@@ -51,59 +51,6 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
-void f(){
-  const int rows = 3;
-  const int cols = 9;
-
-  Matrix randomMatrix(rows, cols);
-
-  for (int i = 0; i < rows; ++i) {
-      for (int j = 0; j < cols; ++j) {
-          // Generate a random value between 0 and 9
-          int randomValue = rand() % 10;
-          randomMatrix(i, j) = randomValue;
-      }
-  }
-  std::cout << randomMatrix << std::endl << std::endl;
-  Vector myVector = Eigen::Map<Vector>(randomMatrix.data(), randomMatrix.size());
-
-  //
-  std::cout << "juju" << std::endl;
-  for (int c = 0; c < 3; c ++) {
-    Vector map = myVector.block(9 * c, 0, 9, 1);  // c-th channel map
-    std::cout << "huhu" << std::endl
-              // << myVector.size() << std::endl 
-              // << map.size() << std::endl 
-              << map << std::endl;
-
-  }
-  std::cout << "juju" << std::endl;
-
-}
-
-// void Conv::forward(const Matrix& bottom) {
-  // f();
-  // int n_sample = bottom.cols();
-  // top.resize(height_out * width_out * channel_out, n_sample);
-  // data_cols.resize(n_sample);
-  // for (int i = 0; i < n_sample; i ++) {
-  //   GpuTimer timer;
-  //   timer.Start();
-  //   // im2col
-  //   Matrix data_col;
-  //   im2col(bottom.col(i), data_col);
-  //   data_cols[i] = data_col;
-  //   // conv by product
-  //   Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-  //   result.rowwise() += bias.transpose();
-  //   top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  //   timer.Stop();
-  //   float time = timer.Elapsed();
-  //   printf("Processing time (%s): %f ms\n", "use host", time);
-  //   // if(i == 1) break;
-  // }
-// }
-
 void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   int size_image = height_in * width_in * channel_in;
@@ -151,10 +98,11 @@ void Conv::forward(const Matrix& bottom) {
     data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
     data_col = data_col_t.transpose();
 
+    // check
     Matrix T;
     im2col(bottom.col(i), T);
-    if (T == data_col) std::cout << "hehe" << std:: endl;
-    else std::cout << "huhu" << std::endl;
+    if (T == data_col) std::cout << "equal with channel in " << channel_in << std:: endl;
+    else std::cout << "not equal with channel in " << channel_in  << std::endl;
 
     // Free GPU memory
     cudaFree(d_image);
@@ -178,6 +126,29 @@ void Conv::forward(const Matrix& bottom) {
   delete[] _data_col_gpu;
   delete[] _result;
 }
+
+
+// void Conv::forward(const Matrix& bottom) {
+  // int n_sample = bottom.cols();
+  // top.resize(height_out * width_out * channel_out, n_sample);
+  // data_cols.resize(n_sample);
+  // for (int i = 0; i < n_sample; i ++) {
+  //   GpuTimer timer;
+  //   timer.Start();
+  //   // im2col
+  //   Matrix data_col;
+  //   im2col(bottom.col(i), data_col);
+  //   data_cols[i] = data_col;
+  //   // conv by product
+  //   Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+  //   result.rowwise() += bias.transpose();
+  //   top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+  //   timer.Stop();
+  //   float time = timer.Elapsed();
+  //   printf("Processing time (%s): %f ms\n", "use host", time);
+  //   // if(i == 1) break;
+  // }
+// }
 
 // col2im, used for grad_bottom
 // data_col size: Matrix (hw_out, hw_kernel * channel_in)
@@ -392,4 +363,35 @@ std::vector<float> Conv::get_derivatives() const {
 //     data_cols[i] = data_col;
 //     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 //   }
+// }
+
+
+// void f(){
+//   const int rows = 3;
+//   const int cols = 9;
+
+//   Matrix randomMatrix(rows, cols);
+
+//   for (int i = 0; i < rows; ++i) {
+//       for (int j = 0; j < cols; ++j) {
+//           // Generate a random value between 0 and 9
+//           int randomValue = rand() % 10;
+//           randomMatrix(i, j) = randomValue;
+//       }
+//   }
+//   std::cout << randomMatrix << std::endl << std::endl;
+//   Vector myVector = Eigen::Map<Vector>(randomMatrix.data(), randomMatrix.size());
+
+//   //
+//   std::cout << "juju" << std::endl;
+//   for (int c = 0; c < 3; c ++) {
+//     Vector map = myVector.block(9 * c, 0, 9, 1);  // c-th channel map
+//     std::cout << "huhu" << std::endl
+//               // << myVector.size() << std::endl 
+//               // << map.size() << std::endl 
+//               << map << std::endl;
+
+//   }
+//   std::cout << "juju" << std::endl;
+
 // }
