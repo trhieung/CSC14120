@@ -86,7 +86,7 @@ void add_bias_gpu(float* result_gpu, const float* bias, int height_out, int widt
     cudaMemcpy(bias_gpu, bias, channel_out * sizeof(float), cudaMemcpyHostToDevice);
 
     // Launch the kernel
-    addBiasKernel<<<grid_size, block_size>>>(result_gpu, bias_gpu, height_out, width_out, channel_out);
+    add_bias_kernel<<<grid_size, block_size>>>(result_gpu, bias_gpu, height_out, width_out, channel_out);
 
     // Synchronize to make sure the kernel is finished before copying back the result
     cudaDeviceSynchronize();
