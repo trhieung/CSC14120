@@ -29,7 +29,7 @@ __global__ void im2col_kernel(const float* image, float* data_col,
                 
                 // Perform vectorized load and store if possible
                 data_col[data_col_index] = (h >= 0 && h < height_in && w >= 0 && w < width_in) ?
-                                           image[image_index] : 0.0;
+                                        image[image_index] : 0.0;
             }
         }
     }

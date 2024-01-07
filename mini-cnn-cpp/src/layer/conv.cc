@@ -140,6 +140,7 @@ void Conv::forward(const Matrix& bottom) {
     timer.Stop();
     float time = timer.Elapsed();
     printf("Processing time (%s): %f ms\n", "use device", time);
+    break;
   }
 
   delete[] _data_col_gpu;
