@@ -57,6 +57,35 @@ void im2col_gpu(const float* image, float* data_col,
     cudaDeviceSynchronize();
 }
 
+// Kernel function to add bias to each element of the result matrix on GPU
+__global__ void add_bias_kernel(float* result, const float* bias,
+                                int height_out, int width_out, int channel_out) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idx < height_out * width_out * channel_out) {
+        int c = idx % channel_out;
+        idx /= channel_out;
+
+        int j_out = idx % width_out;
+        idx /= width_out;
+
+        int i_out = idx % height_out;
+
+        result[(i_out * width_out + j_out) * channel_out + c] += bias[c];
+    }
+}
+
+// Wrapper function for GPU bias addition
+void add_bias_gpu(float* result, const float* bias,
+                int height_out, int width_out, int channel_out) {
+    int block_size = 256;  // You can adjust this based on your device capabilities
+    int grid_size = (height_out * width_out * channel_out + block_size - 1) / block_size;
+
+    add_bias_kernel<<<grid_size, block_size>>>(result, bias, height_out, width_out, channel_out);
+
+    cudaDeviceSynchronize();
+}
+
 
 // #include "./final.cuh"
 

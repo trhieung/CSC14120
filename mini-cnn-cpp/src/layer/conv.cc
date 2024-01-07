@@ -99,10 +99,10 @@ void Conv::forward(const Matrix& bottom) {
     data_col = data_col_t.transpose();
 
     // check
-    Matrix T;
-    im2col(bottom.col(i), T);
-    if (T == data_col) std::cout << "equal with channel in " << channel_in << std:: endl;
-    else std::cout << "not equal with channel in " << channel_in  << std::endl;
+    // Matrix T;
+    // im2col(bottom.col(i), T);
+    // if (T == data_col) std::cout << "equal with channel in " << channel_in << std:: endl;
+    // else std::cout << "not equal with channel in " << channel_in  << std::endl;
 
     // Free GPU memory
     cudaFree(d_image);
@@ -113,7 +113,20 @@ void Conv::forward(const Matrix& bottom) {
     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
     result = result_t.transpose();    
     
+    // add bias in cpu
     result.rowwise() += bias.transpose();
+
+    // add bias in gpu and check
+    float* _huhu = new float[height_out * width_out*channel_out];
+    memcpy(_huhu, _result, height_out * width_out*channel_out);
+    add_bias_gpu(_huhu, bias, height_out, width_out, channel_out);
+    Matrix huhu_t = Eigen::Map<Matrix>(_huhu, channel_out, height_out * width_out);
+    Matrix huhu = huhu_t.transpose();    
+
+    if (huhu == result) std::cout << "equal with channel in " << channel_in << std:: endl;
+    else std::cout << "not equal with channel in " << channel_in  << std::endl;
+
+    delete[] _huhu;
 
     data_cols[i] = data_col;
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
