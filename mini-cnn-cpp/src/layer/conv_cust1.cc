@@ -42,12 +42,12 @@ __global__ void matrix_multiplication_kernel_cust1(const float* data_col, const 
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (row < height_out && col < channel_out) {
+    if (row < height_out && col < width_out) {
         float value = 0.0f;
         for (int k = 0; k < channel_in_hw_kernel; ++k) {
-            value += data_col[row * channel_in_hw_kernel + k] * weight[k * channel_out + col];
+            value += data_col[row * channel_in_hw_kernel + k] * weight[k * width_out + col];
         }
-        result[row * channel_out + col] = value;
+        result[row * width_out + col] = value;
     }
 }
 
