@@ -113,23 +113,10 @@ void Conv::forward(const Matrix& bottom) {
 
     // add bias in cpu
     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
-    result = result_t.transpose();  
+    result = result_t.transpose(); 
     result.rowwise() += bias.transpose();
 
-    // add bias in GPU
-    float* _result_gpu = new float[height_out * width_out * channel_out];
-    memcpy(_result_gpu, _result, height_out * width_out * channel_out);
-    add_bias_gpu(_result_gpu, bias.data(), height_out, width_out, channel_out);
-
-    // Copy GPU result back to Eigen::Matrix for comparison
-    Matrix result_gpu_t = Eigen::Map<Matrix>(_result_gpu, channel_out, height_out * width_out);
-    Matrix result_gpu = result_gpu_t.transpose();
-
-    if (result_gpu == result) std::cout << "equal with channel in " << channel_in << std:: endl;
-    else std::cout << "not equal with channel in " << channel_in  << std::endl;
-
-    delete[] _result_gpu;
-
+    // post handle
     data_cols[i] = data_col;
     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
     timer.Stop();
