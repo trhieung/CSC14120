@@ -12,9 +12,9 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < height_out * width_out * channel_in) {
-        int c = index / (height_out * width_out);
-        int i_out = (index % (height_out * width_out)) / width_out;
-        int j_out = (index % (height_out * width_out)) % width_out;
+        int c = index % channel_in;
+        int i_out = (index / channel_in) / width_out;
+        int j_out = (index / channel_in) % width_out;
 
         int start_h = i_out * stride - pad_h;
         int start_w = j_out * stride - pad_w;
@@ -35,6 +35,7 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
         }
     }
 }
+
 
 __global__ void matrix_multiplication_kernel_cust1(const float* data_col, const float* weight,
                                                    float* result, int height_out, int width_out,
