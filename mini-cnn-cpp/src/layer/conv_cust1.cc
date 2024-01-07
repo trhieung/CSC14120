@@ -28,10 +28,6 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
                 int data_col_index = (i_out * width_out + j_out) * height_kernel * width_kernel * channel_in +
                                      (i_kernel * width_kernel + j_kernel) * channel_in + c;
 
-                // Debug print statements
-                printf("Index: %d, c: %d, i_out: %d, j_out: %d, h: %d, w: %d, image_index: %d, data_col_index: %d\n",
-                       index, c, i_out, j_out, h, w, image_index, data_col_index);
-
                 // Perform vectorized load and store if possible
                 data_col[data_col_index] = (h >= 0 && h < height_in && w >= 0 && w < width_in) ?
                                            image[image_index] : 0.0;
@@ -39,8 +35,6 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
         }
     }
 }
-
-
 
 __global__ void matrix_multiplication_kernel_cust1(const float* data_col, const float* weight,
                                                    float* result, int height_out, int width_out,
@@ -71,7 +65,7 @@ void Conv::im2col_gpu(const Vector& image, Matrix& data_col_gpu) {
     cudaMemcpy(image_gpu, image.data(), sizeof(float) * image.size(), cudaMemcpyHostToDevice);
 
     // Define block and grid dimensions
-    dim3 threadsPerBlock(256);  // You can adjust this value based on your GPU's capabilities
+    dim3 threadsPerBlock(256);
     dim3 blocksPerGrid((hw_out * channel_in + threadsPerBlock.x - 1) / threadsPerBlock.x);
 
     // Launch GPU kernel
@@ -145,8 +139,7 @@ void Conv::forward_gpu(const Matrix& bottom) {
         float time = timer.Elapsed();
         printf("Processing time (%s): %f ms\n", "use device", time);
 
-        Matrix result = Eigen::Map<Matrix>(result_cpu, channel_out, height_out * width_out);
-        result = result.transpose();
+        Matrix result = Eigen::Map<Matrix>(result_cpu, height_out * width_out, channel_out);
         result.rowwise() += bias.transpose();
         top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 
