@@ -27,7 +27,11 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
                 int image_index = (c * height_in + h) * width_in + w;
                 int data_col_index = (i_out * width_out + j_out) * height_kernel * width_kernel * channel_in +
                                      (i_kernel * width_kernel + j_kernel) * channel_in + c;
-                
+
+                // Debug print statements
+                printf("Index: %d, c: %d, i_out: %d, j_out: %d, h: %d, w: %d, image_index: %d, data_col_index: %d\n",
+                       index, c, i_out, j_out, h, w, image_index, data_col_index);
+
                 // Perform vectorized load and store if possible
                 data_col[data_col_index] = (h >= 0 && h < height_in && w >= 0 && w < width_in) ?
                                            image[image_index] : 0.0;
@@ -35,6 +39,7 @@ __global__ void im2col_gpu_kernel(const float* image, float* data_col,
         }
     }
 }
+
 
 
 __global__ void matrix_multiplication_kernel_cust1(const float* data_col, const float* weight,
