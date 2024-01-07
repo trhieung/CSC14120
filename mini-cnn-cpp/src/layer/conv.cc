@@ -52,23 +52,37 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
 }
 
 void f(){
-  const int rows = 28;
-    const int cols = 28;
+  const int rows = 3;
+  const int cols = 9;
 
-    // Create a 28x28 matrix with random values between 0 and 9
-    Matrix randomMatrix(rows, cols);
-    randomMatrix = Eigen::Matrix::Random(rows, cols);
-    randomMatrix = (randomMatrix + Eigen::MatrixXd::Constant(rows, cols, 1.0)) * 4.5; // Scale to get values between 0 and 9
+  Matrix randomMatrix(rows, cols);
 
-    // Convert to integer matrix
-    Eigen::Matrix intMatrix = randomMatrix.cast<int>();
+  for (int i = 0; i < rows; ++i) {
+      for (int j = 0; j < cols; ++j) {
+          // Generate a random value between 0 and 9
+          int randomValue = rand() % 10;
+          randomMatrix(i, j) = randomValue;
+      }
+  }
+  std::cout << randomMatrix << std::endl << std::endl;
+  Vector myVector = Eigen::Map<Vector>(randomMatrix.data(), randomMatrix.size());
 
-    // Print the matrix
-    std::cout << intMatrix << std::endl;
+  //
+  std::cout << "juju" << std::endl;
+  for (int c = 0; c < 3; c ++) {
+    Vector map = myVector.block(9 * c, 0, 9, 1);  // c-th channel map
+    std::cout << "huhu" << std::endl
+              // << myVector.size() << std::endl 
+              // << map.size() << std::endl 
+              << map << std::endl;
+
+  }
+  std::cout << "juju" << std::endl;
+
 }
 
-void Conv::forward(const Matrix& bottom) {
-  f();
+// void Conv::forward(const Matrix& bottom) {
+  // f();
   // int n_sample = bottom.cols();
   // top.resize(height_out * width_out * channel_out, n_sample);
   // data_cols.resize(n_sample);
@@ -86,83 +100,84 @@ void Conv::forward(const Matrix& bottom) {
   //   timer.Stop();
   //   float time = timer.Elapsed();
   //   printf("Processing time (%s): %f ms\n", "use host", time);
+  //   // if(i == 1) break;
   // }
-}
-
-// void Conv::forward(const Matrix& bottom) {
-//   int n_sample = bottom.cols();
-//   int size_image = height_in * width_in * channel_in;
-//   int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
-//   top.resize(height_out * width_out * channel_out, n_sample);
-//   data_cols.resize(n_sample);
-
-//   // paralel init
-//   dim3 blockSize(32, 32);
-//   Matrix data_col;
-//   Matrix data_col_t;
-//   Matrix result_t;
-//   Matrix weight_t = weight.transpose();
-//   Matrix result;
-//   float* _data_col_gpu = new float[size_data_col];
-//   float* _weight = weight_t.data();
-//   float* _correct_result;
-//   float* _result = new float[height_out * width_out*channel_out];
-
-//   for (int i = 0; i < n_sample; i ++) {
-//     GpuTimer timer;
-//     timer.Start();
-//     // im2col gpu
-//     float* d_image;
-//     float* d_data_col;
-
-//     // Allocate GPU memory
-//     cudaMalloc((void**)&d_image, size_image * sizeof(float));
-//     cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
-
-//     // Transfer data from CPU to GPU
-//     cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
-
-//     // Call GPU im2col function
-//     im2col_gpu(d_image, d_data_col,
-//               height_in, width_in,
-//               height_kernel, width_kernel,
-//               height_out, width_out,
-//               channel_in, stride, pad_h, pad_w);
-
-//     // Transfer data from GPU to CPU
-//     cudaMemcpy(_data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
-    
-//     // convert to Matrix
-//     data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
-//     data_col = data_col_t.transpose();
-
-//     Matrix T;
-//     im2col(bottom.col(i), T);
-//     if (T == data_col) std::cout << "hehe" << std:: endl;
-//     else std::cout << "huhu" << std::endl;
-
-//     // Free GPU memory
-//     cudaFree(d_image);
-//     cudaFree(d_data_col);
-    
-//     // conv by product gpu
-//     matrix_multiplication(_data_col_gpu, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
-//     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
-//     result = result_t.transpose();    
-    
-//     result.rowwise() += bias.transpose();
-
-//     data_cols[i] = data_col;
-//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-//     timer.Stop();
-//     float time = timer.Elapsed();
-//     printf("Processing time (%s): %f ms\n", "use device", time);
-//     break;
-//   }
-
-//   delete[] _data_col_gpu;
-//   delete[] _result;
 // }
+
+void Conv::forward(const Matrix& bottom) {
+  int n_sample = bottom.cols();
+  int size_image = height_in * width_in * channel_in;
+  int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
+  top.resize(height_out * width_out * channel_out, n_sample);
+  data_cols.resize(n_sample);
+
+  // paralel init
+  dim3 blockSize(32, 32);
+  Matrix data_col;
+  Matrix data_col_t;
+  Matrix result_t;
+  Matrix weight_t = weight.transpose();
+  Matrix result;
+  float* _data_col_gpu = new float[size_data_col];
+  float* _weight = weight_t.data();
+  float* _correct_result;
+  float* _result = new float[height_out * width_out*channel_out];
+
+  for (int i = 0; i < n_sample; i ++) {
+    GpuTimer timer;
+    timer.Start();
+    // im2col gpu
+    float* d_image;
+    float* d_data_col;
+
+    // Allocate GPU memory
+    cudaMalloc((void**)&d_image, size_image * sizeof(float));
+    cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
+
+    // Transfer data from CPU to GPU
+    cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Call GPU im2col function
+    im2col_gpu(d_image, d_data_col,
+              height_in, width_in,
+              height_kernel, width_kernel,
+              height_out, width_out,
+              channel_in, stride, pad_h, pad_w);
+
+    // Transfer data from GPU to CPU
+    cudaMemcpy(_data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+    
+    // convert to Matrix
+    data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
+    data_col = data_col_t.transpose();
+
+    Matrix T;
+    im2col(bottom.col(i), T);
+    if (T == data_col) std::cout << "hehe" << std:: endl;
+    else std::cout << "huhu" << std::endl;
+
+    // Free GPU memory
+    cudaFree(d_image);
+    cudaFree(d_data_col);
+    
+    // conv by product gpu
+    matrix_multiplication(_data_col_gpu, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+    result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+    result = result_t.transpose();    
+    
+    result.rowwise() += bias.transpose();
+
+    data_cols[i] = data_col;
+    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+    timer.Stop();
+    float time = timer.Elapsed();
+    printf("Processing time (%s): %f ms\n", "use device", time);
+    break;
+  }
+
+  delete[] _data_col_gpu;
+  delete[] _result;
+}
 
 // col2im, used for grad_bottom
 // data_col size: Matrix (hw_out, hw_kernel * channel_in)
