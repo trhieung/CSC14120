@@ -146,7 +146,7 @@ void Conv::forward(const Matrix& bottom) {
   //   timer.Stop();
   //   float time = timer.Elapsed();
   //   printf("Processing time (%s): %f ms\n", "use host", time);
-  //   // if(i == 1) break;
+  //   break;
   // }
 // }
 
