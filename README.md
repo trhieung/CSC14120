@@ -8,3 +8,7 @@
 
 ## Hướng dẫn chạy với gpu-T4 của google colab
 * Run toàn bộ [script](https://github.com/trhieung/CSC14120/blob/main/report_run.ipynb)
+
+## Báo cáo về final-project
+* Final-report: [click here](https://github.com/trhieung/CSC14120/blob/main/fina_report.ipynb)
+* GPU kernel display: [click-here](https://github.com/trhieung/CSC14120/tree/main/mini-cnn-cpp-gpu/src/kernel)
