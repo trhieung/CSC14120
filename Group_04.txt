@@ -5,7 +5,7 @@ link GPU-kernel implement:
         https://github.com/trhieung/CSC14120/tree/main/mini-cnn-cpp-gpu/src/kernel
 
 link video demo
-        "not available now!"
+        https://www.youtube.com/watch?v=jvX2MMyc3qw
 
 Chạy toàn bộ notebook sau để run: 
         https://github.com/trhieung/CSC14120/blob/main/report_run.ipynb
