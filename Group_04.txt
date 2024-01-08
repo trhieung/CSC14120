@@ -1,0 +1,8 @@
+link source code:
+        https://github.com/trhieung/CSC14120.git
+
+link GPU-kernel implement:
+        https://github.com/trhieung/CSC14120/tree/main/mini-cnn-cpp-gpu/src/kernel
+
+link video demo/Chạy toàn bộ notebook sau để run: 
+        https://github.com/trhieung/CSC14120/blob/main/report_run.ipynb
