@@ -223,74 +223,86 @@ std::vector<float> Conv::get_derivatives() const {
 
 // for comparing with cpu
 
-// getting time on one im2col-gpu
-void Conv::forward(const Matrix& bottom) {
-  int n_sample = bottom.cols();
-  top.resize(height_out * width_out * channel_out, n_sample);
-  data_cols.resize(n_sample);
-  for (int i = 0; i < n_sample; i ++) {
-    GpuTimer timer;
-    timer.Start();
+// // getting time on one im2col-gpu
+// void Conv::forward(const Matrix& bottom) {
 
-    // im2col gpu
-    int _v = height_kernel * width_kernel * channel_in;
-    float* d_image;
-    float* d_data_col;
-    int size_image = height_in * width_in * channel_in;
-    int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
+//   int n_sample = bottom.cols();
+//   int size_image = height_in * width_in * channel_in;
+//   int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
 
-    // Allocate GPU memory
-    cudaMalloc((void**)&d_image, size_image * sizeof(float));
-    cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
+//   // paralel init
+//   dim3 blockSize(32, 32);
+//   Matrix data_col;
+//   Matrix data_col_t;
+//   Matrix result_t;
+//   Matrix weight_t = weight.transpose();
+//   Matrix result;
+//   float* _data_col_gpu = new float[size_data_col];
+//   float* _weight = weight_t.data();
+//   float* _correct_result;
+//   float* _result = new float[height_out * width_out*channel_out];
 
-    // Transfer data from CPU to GPU
-    cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
+//   for (int i = 0; i < n_sample; i ++) {
+//     GpuTimer timer;
+//     timer.Start();
+//     // im2col gpu
+//     float* d_image;
+//     float* d_data_col;
 
-    // Call GPU im2col function
-    im2col_gpu(d_image, d_data_col,
-              height_in, width_in,
-              height_kernel, width_kernel,
-              height_out, width_out,
-              channel_in, stride, pad_h, pad_w);
+//     // Allocate GPU memory
+//     cudaMalloc((void**)&d_image, size_image * sizeof(float));
+//     cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
 
-    // Transfer data from GPU to CPU
-    float* data_col_gpu = new float[size_data_col];
-    cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+//     // Transfer data from CPU to GPU
+//     cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
+
+//     // Call GPU im2col function
+//     im2col_gpu(d_image, d_data_col,
+//               height_in, width_in,
+//               height_kernel, width_kernel,
+//               height_out, width_out,
+//               channel_in, stride, pad_h, pad_w);
+
+//     // Transfer data from GPU to CPU
+//     cudaMemcpy(_data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
     
-    timer.Stop();
-    float time = timer.Elapsed();
-    printf("Processing time (%s): %f ms\n", "use device", time);
+//     // convert to Matrix
+//     data_col_t = Eigen::Map<Matrix>(_data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
+//     data_col = data_col_t.transpose();
+
+//     // check
+//     // Matrix T;
+//     // im2col(bottom.col(i), T);
+//     // if (T == data_col) std::cout << "equal with channel in " << channel_in << std:: endl;
+//     // else std::cout << "not equal with channel in " << channel_in  << std::endl;
+
+//     // Free GPU memory
+//     cudaFree(d_image);
+//     cudaFree(d_data_col);
     
-    // Free GPU memory
-    cudaFree(d_image);
-    cudaFree(d_data_col);
-
-    Matrix data_col = Eigen::Map<Matrix>(data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
-
-    // Check results
-    // Matrix hehe;
-    // im2col(bottom.col(i), hehe);
-    // std::cout << "bruhh" << std::endl;
-    // // std::cout << data_col.row(10) << std::endl << std::endl;
-    // Matrix T = hehe.transpose();
-    // if (data_col == T) {
-    //     std::cout << "Matrices are equal." << std::endl;
-    // } else {
-    //     std::cout << "Matrices are not equal." << std::endl;
-    // }
-    // std::cout << std::endl;
-
-    delete[] data_col_gpu;
+//     timer.Stop();
+//     float time = timer.Elapsed();
+//     printf("Processing time (%s): %f ms\n", "use device", time);
     
-    // conv by product
-    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+//     // conv by product gpu
+//     matrix_multiplication(_data_col_gpu, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
 
-    result.rowwise() += bias.transpose();
+//     // add bias in cpu
+//     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+//     result = result_t.transpose(); 
+//     result.rowwise() += bias.transpose();
 
-    data_cols[i] = data_col;
-    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  }
-}
+//     // post handle
+//     data_cols[i] = data_col;
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
+
+//   delete[] _data_col_gpu;
+//   delete[] _result;
+  
+// }
 
 // // getting time on one matmul-gpu
 // void Conv::forward(const Matrix& bottom) {

@@ -214,8 +214,4 @@ std::vector<float> Conv::get_derivatives() const {
 //     result.rowwise() += bias.transpose();
 //     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 //   }
-  
-//   timer.Stop();
-//   float time = timer.Elapsed();
-//   printf("Processing time (%s): %f ms\n", "use host", time);
 // }

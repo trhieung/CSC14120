@@ -103,6 +103,8 @@ int main() {
       }
       // optimize
       dnn.update(opt);
+
+      // return 1;
     }
     // test
     dnn.forward(dataset.test_data);
