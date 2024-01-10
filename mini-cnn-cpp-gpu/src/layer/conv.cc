@@ -219,3 +219,121 @@ std::vector<float> Conv::get_derivatives() const {
             res.begin() + grad_weight.size());
   return res;
 }
+
+
+// for comparing with cpu
+
+// getting time on one im2col-gpu
+void Conv::forward(const Matrix& bottom) {
+  int n_sample = bottom.cols();
+  top.resize(height_out * width_out * channel_out, n_sample);
+  data_cols.resize(n_sample);
+  for (int i = 0; i < n_sample; i ++) {
+    GpuTimer timer;
+    timer.Start();
+
+    // im2col gpu
+    int _v = height_kernel * width_kernel * channel_in;
+    float* d_image;
+    float* d_data_col;
+    int size_image = height_in * width_in * channel_in;
+    int size_data_col = height_out * width_out * height_kernel * width_kernel * channel_in;
+
+    // Allocate GPU memory
+    cudaMalloc((void**)&d_image, size_image * sizeof(float));
+    cudaMalloc((void**)&d_data_col, size_data_col * sizeof(float));
+
+    // Transfer data from CPU to GPU
+    cudaMemcpy(d_image, bottom.col(i).data(), size_image * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Call GPU im2col function
+    im2col_gpu(d_image, d_data_col,
+              height_in, width_in,
+              height_kernel, width_kernel,
+              height_out, width_out,
+              channel_in, stride, pad_h, pad_w);
+
+    // Transfer data from GPU to CPU
+    float* data_col_gpu = new float[size_data_col];
+    cudaMemcpy(data_col_gpu, d_data_col, size_data_col * sizeof(float), cudaMemcpyDeviceToHost);
+    
+    timer.Stop();
+    float time = timer.Elapsed();
+    printf("Processing time (%s): %f ms\n", "use device", time);
+    
+    // Free GPU memory
+    cudaFree(d_image);
+    cudaFree(d_data_col);
+
+    Matrix data_col = Eigen::Map<Matrix>(data_col_gpu, height_kernel * width_kernel * channel_in, height_out * width_out);
+
+    // Check results
+    // Matrix hehe;
+    // im2col(bottom.col(i), hehe);
+    // std::cout << "bruhh" << std::endl;
+    // // std::cout << data_col.row(10) << std::endl << std::endl;
+    // Matrix T = hehe.transpose();
+    // if (data_col == T) {
+    //     std::cout << "Matrices are equal." << std::endl;
+    // } else {
+    //     std::cout << "Matrices are not equal." << std::endl;
+    // }
+    // std::cout << std::endl;
+
+    delete[] data_col_gpu;
+    
+    // conv by product
+    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+
+    result.rowwise() += bias.transpose();
+
+    data_cols[i] = data_col;
+    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+  }
+}
+
+// // getting time on one matmul-gpu
+// void Conv::forward(const Matrix& bottom) {
+//   int n_sample = bottom.cols();
+//   top.resize(height_out * width_out * channel_out, n_sample);
+//   data_cols.resize(n_sample);
+
+//   // paralel init
+//   dim3 blockSize(32, 32);
+//   Matrix data_col_t;
+//   Matrix result_t;
+//   Matrix weight_t;
+//   Matrix result;
+//   float* _data_col;
+//   float* _weight;
+//   float* _correct_result;
+//   float* _result = new float[height_out * width_out*channel_out];
+
+//   for (int i = 0; i < n_sample; i ++) {
+//     // im2col
+//     Matrix data_col;
+//     im2col(bottom.col(i), data_col);
+//     data_cols[i] = data_col;
+//     // conv by product
+//     data_col_t  = data_col.transpose();
+//     weight_t = weight.transpose();
+//     _data_col = data_col_t.data(); //(hw_out, hw_kernel * channel_in)
+//     _weight = weight_t.data();     //(channel_in * height_kernel * width_kernel, channel_out)
+//     _correct_result = result_t.data();
+    
+//     GpuTimer timer;
+//     timer.Start();
+
+//     matrix_multiplication(_data_col, _weight, _result, height_out * width_out, channel_in * height_kernel * width_kernel, channel_out, true,blockSize,2);
+
+//     timer.Stop();
+//     float time = timer.Elapsed();
+//     printf("Processing time (%s): %f ms\n", "use device", time);
+
+//     result_t = Eigen::Map<Matrix>(_result, channel_out, height_out * width_out);
+//     result = result_t.transpose();
+//     result.rowwise() += bias.transpose();
+//     top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+//   }
+//   delete[] _result;
+// }
